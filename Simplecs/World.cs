@@ -50,7 +50,7 @@ namespace Simplecs {
             return components != null && components.Remove(entity.key);
         }
 
-        internal ComponentTable<T> Components<T>() where T : struct {
+        internal ComponentTable<T> GetTable<T>() where T : struct {
             if (_components.TryGetValue(typeof(T), out IComponentTable? generic) && generic is ComponentTable<T> typed) {
                 return typed;
             }
