@@ -38,7 +38,7 @@ namespace Simplecs {
                 components = new ComponentTable<T>();
                 _components.Add(components.Type, components);
             }
-            components.Add(entity.key, component);
+            components.Set(entity.key, component);
         }
 
         public bool Detach<T>(Entity entity) where T : struct {

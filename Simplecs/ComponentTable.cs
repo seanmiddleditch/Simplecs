@@ -75,16 +75,22 @@ namespace Simplecs {
         /// </summary>
         /// <param name="key">Entity key.</param>
         /// <param name="data">Component data to add.</param>
-        public void Add(uint key, T data) {
+        public void Set(uint key, T data) {
+            if (key < _sparse.Count && 
+                _sparse[(int)key] < _dense.Count &&
+                _dense[_sparse[(int)key]] == key) {
+                _data[_sparse[(int)key]] = data;
+                return;
+            }
+
             if (key >= _sparse.Count) {
                 _sparse.AddRange(Enumerable.Repeat(int.MaxValue, (int)key - _sparse.Count + 1));
             }
 
-            int denseIndex = _dense.Count;
+            _sparse[(int)key] = _dense.Count;
+
             _dense.Add(key);
             _data.Add(data);
-
-            _sparse[(int)key] = denseIndex;
         }
 
         /// <summary>

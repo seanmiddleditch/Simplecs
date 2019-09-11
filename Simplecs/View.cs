@@ -23,6 +23,8 @@ namespace Simplecs {
 
         public View(World world) => _table = world.Components<T>();
 
+        void Set(Entity entity, T data) => _table.Set(entity.key, data);
+
         public IEnumerator<(Entity, T)> GetEnumerator() {
             foreach ((uint key, T data) in _table) {
                 yield return (new Entity{key=key}, data);
@@ -44,6 +46,9 @@ namespace Simplecs {
         private ComponentTable<T2> _table2;
 
         public View(World world) => (_table1, _table2) = (world.Components<T1>(), world.Components<T2>());
+
+        void Set(Entity entity, T1 data) => _table1.Set(entity.key, data);
+        void Set(Entity entity, T2 data) => _table2.Set(entity.key, data);
 
         public IEnumerator<(Entity, T1, T2)> GetEnumerator() {
             foreach ((uint key, T1 data1) in _table1) {
