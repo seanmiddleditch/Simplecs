@@ -49,6 +49,9 @@ namespace Simplecs {
         private ChunkedStorage<T> _data = new ChunkedStorage<T>();
         private List<Entity> _dense = new List<Entity>();
         private List<int> _sparse = new List<int>();
+#if DEBUG
+        private int _version = 0;
+#endif
 
         public delegate void Callback(Entity entity, ref T component);
 
@@ -83,6 +86,9 @@ namespace Simplecs {
 
             _dense.RemoveAt(_dense.Count - 1);
             _data.RemoveAt(_data.Count - 1);
+#if DEBUG
+            ++_version;
+#endif
             return true;
         }
 
@@ -106,6 +112,9 @@ namespace Simplecs {
 
             _dense.Add(entity);
             _data.Add(data);
+#if DEBUG
+            ++_version;
+#endif
         }
 
         /// <summary>
@@ -134,7 +143,17 @@ namespace Simplecs {
         /// </summary>
         /// <returns>Enumerator of (key, component) tuples.</returns>
         public IEnumerator<(Entity, T)> GetEnumerator() {
+#if DEBUG
+            int version = _version;
+#endif
+
             for (int index = 0; index != _data.Count; ++index) {
+#if DEBUG
+                if (version != _version) {
+                    throw new InvalidOperationException(message:"Enumerating a modified collection.");
+                }
+#endif
+
                 yield return (_dense[index], _data[index]);
             }
         }
@@ -148,7 +167,17 @@ namespace Simplecs {
         /// </summary>
         /// <param name="callback">Invoked for each entity/component pair in table.</param>
         public void Each(Callback callback) {
+#if DEBUG
+            int version = _version;
+#endif
+
             for (int index = 0; index != _data.Count; ++index) {
+#if DEBUG
+                if (version != _version) {
+                    throw new InvalidOperationException(message:"Enumerating a modified collection.");
+                }
+#endif
+
                 callback(_dense[index], ref _data[index]);
             }
         }
@@ -156,6 +185,9 @@ namespace Simplecs {
         public void Clear() {
             _data.Clear();
             _dense.Clear();
+#if DEBUG
+            ++_version;
+#endif
         }
     }
 }
