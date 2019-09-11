@@ -28,37 +28,30 @@ namespace Simplecs {
         protected ViewBase(World world) => _world = world;
 
         /// <summary>
-        /// Marks a component type that must not be present on matched entities.
+        /// World which this view inspects.
         /// </summary>
-        protected void Exclude<T>() where T : struct {
-            _excluded.Add(_world.GetTable<T>());
-        }
+        public World World => _world;
 
-        /// <summary>
-        /// Marks a component type that must be present on matched entities.
-        /// </summary>
-        protected void Require<T>() where T : struct {
-            _required.Add(_world.GetTable<T>());
-        }
+        internal void Exclude<T>() where T : struct => _excluded.Add(_world.GetTable<T>());
+        internal void Require<T>() where T : struct => _required.Add(_world.GetTable<T>());
 
-        /// <summary>
-        /// Tests if an entity is allowed for this match set.
-        /// </summary>
-        /// <param name="entity">Entity to test.</param>
-        /// <returns>True if the entity should be included.</returns>
-        protected bool IsAllowed(Entity entity) {
+        internal bool IsAllowed(Entity entity) => !IsExcluded(entity) && HasRequired(entity);
+
+        private bool IsExcluded(Entity entity) {
             foreach (IComponentTable table in _excluded) {
                 if (table.Contains(entity)) {
-                    return false;
+                    return true;
                 }
             }
+            return false;
+        }
 
+        private bool HasRequired(Entity entity) {
             foreach (IComponentTable table in _required) {
                 if (!table.Contains(entity)) {
                     return false;
                 }
             }
-
             return true;
         }
     }
@@ -108,9 +101,7 @@ namespace Simplecs {
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         /// <summary>
         /// Invokes the given callback for each matched entity and components.
@@ -179,9 +170,7 @@ namespace Simplecs {
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         /// <summary>
         /// Invokes the given callback for each matched entity and components.
@@ -254,9 +243,7 @@ namespace Simplecs {
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         /// <summary>
         /// Invokes the given callback for each matched entity and components.
