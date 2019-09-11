@@ -50,6 +50,8 @@ namespace Simplecs {
         private List<Entity> _dense = new List<Entity>();
         private List<int> _sparse = new List<int>();
 
+        public delegate void Callback(Entity entity, ref T component);
+
         public Type Type => typeof(T);
 
         public int Count => _dense.Count;
@@ -139,6 +141,16 @@ namespace Simplecs {
 
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Iterates all stored components.
+        /// </summary>
+        /// <param name="callback">Invoked for each entity/component pair in table.</param>
+        public void Each(Callback callback) {
+            for (int index = 0; index != _data.Count; ++index) {
+                callback(_dense[index], ref _data[index]);
+            }
         }
 
         public void Clear() {
