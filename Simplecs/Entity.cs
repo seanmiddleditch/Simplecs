@@ -10,25 +10,35 @@
 // with this software. If not, see
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Simplecs {
     /// <summary>
     /// Entity key holder.
     /// </summary>
-    public struct Entity {
+    public struct Entity : IEquatable<Entity> {
         internal uint key;
+
+        public bool Equals(Entity other) {
+            return key == other.key;
+        }
+
+        override public int GetHashCode() {
+            return key.GetHashCode();
+        }
     }
 
     internal static class EntityUtil {
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-        public static Entity MakeKey(int index, byte generation = 0) {
+        public static Entity MakeKey(int index, byte generation = 1) {
             return new Entity{key=((uint)generation << 24) | ((uint)index & 0x00FFFFFF)};
         }
 
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
         public static (int index, byte generation) DecomposeKey(Entity entity) {
-            int index = (int)(entity.key & 0x00FFFFFF);
+            int index = DecomposeIndex(entity);
             byte generation = (byte)(entity.key >> 24);
             return (index, generation);
         }
