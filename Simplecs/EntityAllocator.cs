@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 
 namespace Simplecs {
+    /// <summary>
+    /// Allocates and maintains a unique set of entity keys.
+    /// </summary>
     internal class EntityAllocator {
         private uint _nextId = 1;
         private List<uint> _freeList = new List<uint>();

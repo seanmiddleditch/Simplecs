@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Simplecs {
+    /// <summary>
+    /// Iterators over all entities with a particular component type.
+    /// </summary>
+    /// <typeparam name="T">Type of required component.</typeparam>
     public class View<T> : IEnumerable<(Entity, T)> where T : struct {
         private ComponentTable<T> _table;
 
@@ -18,6 +22,11 @@ namespace Simplecs {
         }
     }
 
+    /// <summary>
+    /// Iterators over all entities with a particular component types.
+    /// </summary>
+    /// <typeparam name="T1">Type of required component.</typeparam>
+    /// <typeparam name="T2">Type of required component.</typeparam>
     public class View<T1, T2> : IEnumerable<(Entity, T1, T2)> where T1 : struct where T2 : struct {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
