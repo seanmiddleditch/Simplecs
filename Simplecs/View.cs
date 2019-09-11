@@ -126,4 +126,47 @@ namespace Simplecs {
             });
         }
     }
+
+    /// <summary>
+    /// Iterators over all entities with a particular component types.
+    /// </summary>
+    /// <typeparam name="T1">Type of required component.</typeparam>
+    /// <typeparam name="T2">Type of required component.</typeparam>
+    /// <typeparam name="T3">Type of required component.</typeparam>
+    public class View<T1, T2, T3> : ViewBase, IEnumerable<(Entity, T1, T2, T3)> where T1 : struct where T2 : struct where T3 : struct{
+        private ComponentTable<T1> _table1;
+        private ComponentTable<T2> _table2;
+        private ComponentTable<T3> _table3;
+
+        public delegate void Callback(Entity entity, ref T1 component1, ref T2 component2, ref T3 component3);
+
+        new public View<T1, T2, T3> Exclude<U>() where U : struct { base.Exclude<U>(); return this; }
+        new public View<T1, T2, T3> Require<U>() where U : struct { base.Require<U>(); return this; }
+
+        public View(World world) : base(world) {
+            _table1 = world.GetTable<T1>();
+            _table2 = world.GetTable<T2>();
+            _table3 = world.GetTable<T3>();
+        }
+
+        public IEnumerator<(Entity, T1, T2, T3)> GetEnumerator() {
+            foreach ((Entity entity, T1 data1) in _table1) {
+                if (IsAllowed(entity) && _table2.TryGet(entity, out T2 data2) && _table3.TryGet(entity, out T3 data3)) {
+                    yield return (entity, data1, data2, data3);
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return this.GetEnumerator();
+        }
+
+        public void Each(Callback callback) {
+            _table1.Each((Entity entity, ref T1 component1) => {
+                if (IsAllowed(entity) && _table2.Contains(entity) && _table3.Contains(entity)) {
+                    callback(entity, ref component1, ref _table2[entity], ref _table3[entity]);
+                }
+            });
+        }
+    }
 }
