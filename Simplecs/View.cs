@@ -14,19 +14,64 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Simplecs {
+    public class ViewBase {
+        private World _world;
+        private List<IComponentTable> _required = new List<IComponentTable>();
+        private List<IComponentTable> _excluded = new List<IComponentTable>();
+
+        protected ViewBase(World world) => _world = world;
+
+        public void Exclude<T>() where T : struct {
+            _excluded.Add(_world.GetTable<T>());
+        }
+
+        public void Require<T>() where T : struct {
+            _required.Add(_world.GetTable<T>());
+        }
+
+        protected bool IsExcluded(Entity entity) {
+            foreach (IComponentTable table in _excluded) {
+                if (table.Contains(entity)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected bool HasRequired(Entity entity) {
+            foreach (IComponentTable table in _required) {
+                if (!table.Contains(entity)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        protected bool IsAllowed(Entity entity) {
+            return !IsExcluded(entity) && HasRequired(entity);
+        }
+    }
+
     /// <summary>
     /// Iterators over all entities with a particular component type.
     /// </summary>
     /// <typeparam name="T">Type of required component.</typeparam>
-    public class View<T> : IEnumerable<(Entity, T)> where T : struct {
+    public class View<T> : ViewBase, IEnumerable<(Entity, T)> where T : struct {
         private ComponentTable<T> _table;
 
-        public View(World world) => _table = world.GetTable<T>();
+        public View(World world) : base(world) => _table = world.GetTable<T>();
 
         public delegate void Callback(Entity entity, ref T component);
 
+        new public View<T> Exclude<U>() where U : struct { base.Exclude<U>(); return this; }
+        new public View<T> Require<U>() where U : struct { base.Require<U>(); return this; }
+
         public IEnumerator<(Entity, T)> GetEnumerator() {
-            return _table.GetEnumerator();
+            foreach ((Entity entity, T component) in _table) {
+                if (IsAllowed(entity)) {
+                    yield return (entity, component);
+                }
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
@@ -34,7 +79,11 @@ namespace Simplecs {
         }
 
         public void Each(Callback callback) {
-            _table.Each((Entity entity, ref T component) => callback(entity, ref component));
+            _table.Each((Entity entity, ref T component) => {
+                if (IsAllowed(entity)) {
+                    callback(entity, ref component);
+                }
+            });
         }
     }
 
@@ -43,20 +92,23 @@ namespace Simplecs {
     /// </summary>
     /// <typeparam name="T1">Type of required component.</typeparam>
     /// <typeparam name="T2">Type of required component.</typeparam>
-    public class View<T1, T2> : IEnumerable<(Entity, T1, T2)> where T1 : struct where T2 : struct {
+    public class View<T1, T2> : ViewBase, IEnumerable<(Entity, T1, T2)> where T1 : struct where T2 : struct {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
 
         public delegate void Callback(Entity entity, ref T1 component1, ref T2 component2);
 
-        public View(World world) {
+        new public View<T1, T2> Exclude<U>() where U : struct { base.Exclude<U>(); return this; }
+        new public View<T1, T2> Require<U>() where U : struct { base.Require<U>(); return this; }
+
+        public View(World world) : base(world) {
             _table1 = world.GetTable<T1>();
             _table2 = world.GetTable<T2>();
         }
 
         public IEnumerator<(Entity, T1, T2)> GetEnumerator() {
             foreach ((Entity entity, T1 data1) in _table1) {
-                if (_table2.TryGet(entity, out T2 data2)) {
+                if (IsAllowed(entity) && _table2.TryGet(entity, out T2 data2)) {
                     yield return (entity, data1, data2);
                 }
             }
@@ -68,7 +120,7 @@ namespace Simplecs {
 
         public void Each(Callback callback) {
             _table1.Each((Entity entity, ref T1 component1) => {
-                if (_table2.Contains(entity)) {
+                if (IsAllowed(entity) && _table2.Contains(entity)) {
                     callback(entity, ref component1, ref _table2[entity]);
                 }
             });
