@@ -39,42 +39,31 @@ namespace Simplecs {
     internal class ComponentTable<T> : IComponentTable, IEnumerable<(uint, T)> where T : struct {
         private List<T> _data = new List<T>();
         private List<uint> _dense = new List<uint>();
-        private List<uint> _sparse = new List<uint>();
+        private List<int> _sparse = new List<int>();
 
         public Type Type => typeof(T);
 
         public bool Has(uint key) {
-            if (key >= _sparse.Count) {
-                return false;
-            }
-
-            uint denseIndex = _sparse[(int)key];
-            if (denseIndex >= _dense.Count) {
-                return false;
-            }
-
-            return _dense[(int)denseIndex] == key;
+            return key < _sparse.Count && 
+                _sparse[(int)key] < _dense.Count &&
+                _dense[_sparse[(int)key]] == key;
         }
 
         public bool Remove(uint key) {
-            if (key >= _sparse.Count) {
+            if (key >= _sparse.Count ||
+                _sparse[(int)key] >= _dense.Count ||
+                _dense[_sparse[(int)key]] != key) {
                 return false;
             }
 
-            uint denseIndex = _sparse[(int)key];
-            if (denseIndex >= _dense.Count) {
-                return false;
-            }
-
-            if (_dense[(int)denseIndex] != key) {
-                return false;
-            }
-
+            int denseIndex = _sparse[(int)key];
             uint newSparse = _dense[_dense.Count - 1];
-            _sparse[(int)newSparse] = denseIndex;
 
-            _dense[(int)denseIndex] = newSparse;
-            _data[(int)denseIndex] = _data[_data.Count - 1];
+            _sparse[(int)newSparse] = _sparse[(int)key];
+            _sparse[(int)key] = int.MaxValue;
+
+            _dense[denseIndex] = newSparse;
+            _data[denseIndex] = _data[_data.Count - 1];
 
             _dense.RemoveAt(_dense.Count - 1);
             _data.RemoveAt(_data.Count - 1);
@@ -88,10 +77,10 @@ namespace Simplecs {
         /// <param name="data">Component data to add.</param>
         public void Add(uint key, T data) {
             if (key >= _sparse.Count) {
-                _sparse.AddRange(Enumerable.Repeat(uint.MaxValue, (int)key - _sparse.Count + 1));
+                _sparse.AddRange(Enumerable.Repeat(int.MaxValue, (int)key - _sparse.Count + 1));
             }
 
-            uint denseIndex = (uint)_dense.Count;
+            int denseIndex = _dense.Count;
             _dense.Add(key);
             _data.Add(data);
 
@@ -105,23 +94,14 @@ namespace Simplecs {
         /// <param name="data">Component data associated with key.</param>
         /// <returns>True if an entry existed for the supplied key.</returns>
         public bool TryGet(uint key, out T data) {
-            if (key >= _sparse.Count) {
+            if (key >= _sparse.Count ||
+                _sparse[(int)key] >= _dense.Count ||
+                _dense[_sparse[(int)key]] != key) {
                 data = default(T);
                 return false;
             }
 
-            uint denseIndex = _sparse[(int)key];
-            if (denseIndex >= _dense.Count) {
-                data = default(T);
-                return false;
-            }
-
-            if (_dense[(int)denseIndex] != key) {
-                data = default(T);
-                return false;
-            }
-
-            data = _data[(int)denseIndex];
+            data = _data[_sparse[(int)key]];
             return true;
         }
 
