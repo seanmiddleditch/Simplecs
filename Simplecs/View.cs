@@ -24,9 +24,7 @@ namespace Simplecs {
         public View(World world) => _table = world.GetTable<T>();
 
         public IEnumerator<(Entity, T)> GetEnumerator() {
-            foreach ((uint key, T data) in _table) {
-                yield return (new Entity{key=key}, data);
-            }
+            return _table.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
@@ -46,9 +44,9 @@ namespace Simplecs {
         public View(World world) => (_table1, _table2) = (world.GetTable<T1>(), world.GetTable<T2>());
 
         public IEnumerator<(Entity, T1, T2)> GetEnumerator() {
-            foreach ((uint key, T1 data1) in _table1) {
-                if (_table2.TryGet(key, out T2 data2)) {
-                    yield return (new Entity{key=key}, data1, data2);
+            foreach ((Entity entity, T1 data1) in _table1) {
+                if (_table2.TryGet(entity, out T2 data2)) {
+                    yield return (entity, data1, data2);
                 }
             }
         }

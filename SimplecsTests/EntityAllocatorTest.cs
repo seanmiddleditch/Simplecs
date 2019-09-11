@@ -7,23 +7,23 @@ namespace SimplecsTests {
         public void AllocateAndFreeList() {
             var allocator = new EntityAllocator(freeMinimum:0);
 
-            Assert.AreEqual(expected:1u, actual:allocator.Allocate());
-            Assert.AreEqual(expected:2u, actual:allocator.Allocate());
-            Assert.AreEqual(expected:3u, actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(1), actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(2), actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(3), actual:allocator.Allocate());
 
-            allocator.Deallocate(2u);
-            allocator.Deallocate(3u);
-            allocator.Deallocate(1u);
+            allocator.Deallocate(EntityUtil.MakeKey(2));
+            allocator.Deallocate(EntityUtil.MakeKey(3));
+            allocator.Deallocate(EntityUtil.MakeKey(1));
 
             // Generation will be bumped for the recycled indices.
             //
-            Assert.AreEqual(expected:EntityAllocator.MakeKey(2u, 1), actual:allocator.Allocate());
-            Assert.AreEqual(expected:EntityAllocator.MakeKey(3u, 1), actual:allocator.Allocate());
-            Assert.AreEqual(expected:EntityAllocator.MakeKey(1u, 1), actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(2, generation:1), actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(3, generation:1), actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(1, generation:1), actual:allocator.Allocate());
 
             // But not for new indices.
             //
-            Assert.AreEqual(expected:4u, actual:allocator.Allocate());
+            Assert.AreEqual(expected:EntityUtil.MakeKey(4), actual:allocator.Allocate());
         }
     }
 }

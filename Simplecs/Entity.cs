@@ -10,11 +10,32 @@
 // with this software. If not, see
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Runtime.CompilerServices;
+
 namespace Simplecs {
     /// <summary>
     /// Entity key holder.
     /// </summary>
     public struct Entity {
         internal uint key;
+    }
+
+    internal static class EntityUtil {
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static Entity MakeKey(int index, byte generation = 0) {
+            return new Entity{key=((uint)generation << 24) | ((uint)index & 0x00FFFFFF)};
+        }
+
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static (int index, byte generation) DecomposeKey(Entity entity) {
+            int index = (int)(entity.key & 0x00FFFFFF);
+            byte generation = (byte)(entity.key >> 24);
+            return (index, generation);
+        }
+
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static int DecomposeIndex(Entity entity) {
+            return (int)(entity.key & 0x00FFFFFF);
+        }
     }
 }

@@ -23,46 +23,52 @@ namespace Simplecs {
         /// <value>Type of the component data stored in this table.</value>
         Type Type { get; }
 
-        /// <param name="key">Entity key.</param>
+        /// <param name="entity">Entity key.</param>
         /// <returns>True if a component is stored for this key.</returns>
-        bool Has(uint key);
+        bool Has(Entity entity);
 
-        /// <param name="key">Entity key.</param>
+        /// <param name="entity">Entity key.</param>
         /// <returns>True if a component was stored for this key and is now removed.</returns>
-        bool Remove(uint key);
+        bool Remove(Entity entity);
     }
 
     /// <summary>
     /// Stores a table of components mapped by unique entity keys.
     /// </summary>
     /// <typeparam name="T">Struct type containing component data.</typeparam>
-    internal class ComponentTable<T> : IComponentTable, IEnumerable<(uint, T)> where T : struct {
+    internal class ComponentTable<T> : IComponentTable, IEnumerable<(Entity, T)> where T : struct {
         private List<T> _data = new List<T>();
-        private List<uint> _dense = new List<uint>();
+        private List<Entity> _dense = new List<Entity>();
         private List<int> _sparse = new List<int>();
 
         public Type Type => typeof(T);
 
-        public bool Has(uint key) {
-            return key < _sparse.Count && 
-                _sparse[(int)key] < _dense.Count &&
-                _dense[_sparse[(int)key]] == key;
+        public bool Has(Entity entity) {
+            int index = EntityUtil.DecomposeIndex(entity);
+
+            return index > 0 &&
+                index < _sparse.Count && 
+                _sparse[(int)index] < _dense.Count &&
+                _dense[_sparse[(int)index]].key == entity.key;
         }
 
-        public bool Remove(uint key) {
-            if (key >= _sparse.Count ||
-                _sparse[(int)key] >= _dense.Count ||
-                _dense[_sparse[(int)key]] != key) {
+        public bool Remove(Entity entity) {
+            int index = EntityUtil.DecomposeIndex(entity);
+
+            if (index < 0 ||
+                index >= _sparse.Count ||
+                _sparse[(int)index] >= _dense.Count ||
+                _dense[_sparse[(int)index]].key != entity.key) {
                 return false;
             }
 
-            int denseIndex = _sparse[(int)key];
-            uint newSparse = _dense[_dense.Count - 1];
+            int denseIndex = _sparse[(int)index];
+            (int newSparse, byte _) = EntityUtil.DecomposeKey(_dense[_dense.Count - 1]);
 
-            _sparse[(int)newSparse] = _sparse[(int)key];
-            _sparse[(int)key] = int.MaxValue;
+            _sparse[(int)newSparse] = _sparse[(int)index];
+            _sparse[(int)index] = int.MaxValue;
 
-            _dense[denseIndex] = newSparse;
+            _dense[denseIndex] = _dense[_dense.Count - 1];
             _data[denseIndex] = _data[_data.Count - 1];
 
             _dense.RemoveAt(_dense.Count - 1);
@@ -73,41 +79,47 @@ namespace Simplecs {
         /// <summary>
         /// Adds a component to the table.
         /// </summary>
-        /// <param name="key">Entity key.</param>
+        /// <param name="entity">Entity key.</param>
         /// <param name="data">Component data to add.</param>
-        public void Set(uint key, T data) {
-            if (key < _sparse.Count && 
-                _sparse[(int)key] < _dense.Count &&
-                _dense[_sparse[(int)key]] == key) {
-                _data[_sparse[(int)key]] = data;
+        public void Set(Entity entity, T data) {
+            int index = EntityUtil.DecomposeIndex(entity);
+
+            if (index > 0 &&
+                index < _sparse.Count && 
+                _sparse[(int)index] < _dense.Count &&
+                _dense[_sparse[(int)index]].key == entity.key) {
+                _data[_sparse[(int)index]] = data;
                 return;
             }
 
-            if (key >= _sparse.Count) {
-                _sparse.AddRange(Enumerable.Repeat(int.MaxValue, (int)key - _sparse.Count + 1));
+            if (index >= _sparse.Count) {
+                _sparse.AddRange(Enumerable.Repeat(int.MaxValue, (int)index - _sparse.Count + 1));
             }
 
-            _sparse[(int)key] = _dense.Count;
+            _sparse[(int)index] = _dense.Count;
 
-            _dense.Add(key);
+            _dense.Add(entity);
             _data.Add(data);
         }
 
         /// <summary>
         /// Attempts to retrieve component data stored for an entity key.
         /// </summary>
-        /// <param name="key">Entity key.</param>
+        /// <param name="entity">Entity key.</param>
         /// <param name="data">Component data associated with key.</param>
         /// <returns>True if an entry existed for the supplied key.</returns>
-        public bool TryGet(uint key, out T data) {
-            if (key >= _sparse.Count ||
-                _sparse[(int)key] >= _dense.Count ||
-                _dense[_sparse[(int)key]] != key) {
+        public bool TryGet(Entity entity, out T data) {
+            int index = EntityUtil.DecomposeIndex(entity);
+
+            if (index <= 0 ||
+                index >= _sparse.Count ||
+                _sparse[(int)index] >= _dense.Count ||
+                _dense[_sparse[(int)index]].key != entity.key) {
                 data = default(T);
                 return false;
             }
 
-            data = _data[_sparse[(int)key]];
+            data = _data[_sparse[(int)index]];
             return true;
         }
 
@@ -115,7 +127,7 @@ namespace Simplecs {
         /// Enumerates all entity keys and associated component data stored in the table.
         /// </summary>
         /// <returns>Enumerator of (key, component) tuples.</returns>
-        public IEnumerator<(uint, T)> GetEnumerator() {
+        public IEnumerator<(Entity, T)> GetEnumerator() {
             for (int index = 0; index != _data.Count; ++index) {
                 yield return (_dense[index], _data[index]);
             }

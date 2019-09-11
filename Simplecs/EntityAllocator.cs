@@ -12,15 +12,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Simplecs {
     /// <summary>
     /// Allocates and maintains a unique set of entity keys.
     /// </summary>
     internal class EntityAllocator {
-        private uint _nextIndex = 1;
-        private List<uint> _freeList = new List<uint>();
+        private int _nextIndex = 1;
+        private List<int> _freeList = new List<int>();
         private List<byte> _generations = new List<byte>();
         private int _freeHead = 0;
         private int _freeCount = 0;
@@ -34,8 +33,8 @@ namespace Simplecs {
             _freeMinimum = freeMinimum;
         }
 
-        public uint Allocate() {
-            uint index = AllocateIndex();
+        public Entity Allocate() {
+            int index = AllocateIndex();
 
             // Determine the generation of the key at the given index;
             // for new indices, create a new generation.
@@ -45,12 +44,12 @@ namespace Simplecs {
             }
             byte generation = _generations[(int)index];
 
-            return MakeKey(index, generation);
+            return EntityUtil.MakeKey(index, generation);
         }
 
-        public bool Deallocate(uint key) {
-            (uint index, byte generation) = DecomposeKey(key);
-            if (index != 0 && index < _generations.Count && _generations[(int)index] == generation) {
+        public bool Deallocate(Entity entity) {
+            (int index, byte generation) = EntityUtil.DecomposeKey(entity);
+            if (index > 0 && index < _generations.Count && _generations[(int)index] == generation) {
                 ++_generations[(int)index];
                 AddToFreeList(index);
                 return true;
@@ -58,32 +57,32 @@ namespace Simplecs {
             return false;
         }
 
-        public bool Validate(uint key) {
-            (uint index, byte generation) = DecomposeKey(key);
-            return index != 0 && key < _generations.Count &&  _generations[(int)index] == generation;
+        public bool Validate(Entity entity) {
+            (int index, byte generation) = EntityUtil.DecomposeKey(entity);
+            return index > 0 && index < _generations.Count &&  _generations[(int)index] == generation;
         }
 
-        private void AddToFreeList(uint key) {
+        private void AddToFreeList(int index) {
             // If the freelist is full, grow.
             //
             if (_freeCount == _freeList.Count) {
-                _freeList.Add(key);
+                _freeList.Add(index);
                 ++_freeCount;
                 return;
             }
 
             // Insert into the circular buffer.
             //
-            int index = _freeHead + _freeCount;
-            if (index > _freeList.Count) {
-                index -= _freeList.Count;
+            int freeIndex = _freeHead + _freeCount;
+            if (freeIndex > _freeList.Count) {
+                freeIndex -= _freeList.Count;
             }
 
-            _freeList[index] = key;
+            _freeList[freeIndex] = index;
             ++_freeCount;
         }
 
-        private uint AllocateIndex() {
+        private int AllocateIndex() {
             // Only consume from the freelist if we have some items in it,
             // to avoid recycling the same id too often.
             //
@@ -91,7 +90,7 @@ namespace Simplecs {
                 return _nextIndex++;
             }
 
-            uint index = _freeList[_freeHead];
+            int index = _freeList[_freeHead];
 
             // Update the circular buffer after consuming the head item.
             //
@@ -101,18 +100,6 @@ namespace Simplecs {
             }
 
             return index;
-        }
-
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-        public static uint MakeKey(uint index, byte generation) {
-            return ((uint)generation << 24) | (index & 0x00FFFFFF);
-        }
-
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-        public static (uint index, byte generation) DecomposeKey(uint key) {
-            uint index = key & 0x00FFFFFF;
-            byte generation = (byte)(key >> 24);
-            return (index, generation);
         }
     }
 }

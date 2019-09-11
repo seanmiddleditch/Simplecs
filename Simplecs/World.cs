@@ -19,35 +19,35 @@ namespace Simplecs {
         private Dictionary<Type, IComponentTable> _components = new Dictionary<Type, IComponentTable>();
 
         public EntityBuilder Create() {
-            uint key = _entityAllocator.Allocate();
-            return new EntityBuilder(world:this, entity:new Entity{key = key});
+            Entity entity = _entityAllocator.Allocate();
+            return new EntityBuilder(world:this, entity:entity);
         }
 
         public bool Destroy(Entity entity) {
-            if (!_entityAllocator.Deallocate(entity.key)) {
+            if (!_entityAllocator.Deallocate(entity)) {
                 return false;
             }
 
             bool found = false;
             foreach (var table in _components.Values) {
-                found = table.Remove(entity.key) && found;
+                found = table.Remove(entity) && found;
             }
             return found;
         }
 
         public void Attach<T>(Entity entity, T component) where T : struct {
-            if (!_entityAllocator.Validate(entity.key)) {
+            if (!_entityAllocator.Validate(entity)) {
                 throw new InvalidOperationException(message:"Invalid entity key");
             }
 
             var table = GetTable<T>();
-            table.Set(entity.key, component);
+            table.Set(entity, component);
         }
 
         public bool Detach<T>(Entity entity) where T : struct {
             _components.TryGetValue(typeof(T), out IComponentTable? table);
             var components = table as ComponentTable<T>;
-            return components != null && components.Remove(entity.key);
+            return components != null && components.Remove(entity);
         }
 
         internal ComponentTable<T> GetTable<T>() where T : struct {
