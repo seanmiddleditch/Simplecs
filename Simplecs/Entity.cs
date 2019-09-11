@@ -21,10 +21,19 @@ namespace Simplecs {
     public struct Entity : IEquatable<Entity> {
         internal uint key;
 
+        /// <summary>
+        /// Compares to entities for quality.
+        /// </summary>
+        /// <param name="other">Entity to compare.</param>
+        /// <returns>True if both entities represent the same key.</returns>
         public bool Equals(Entity other) {
             return key == other.key;
         }
 
+        /// <summary>
+        /// Hash code of the entity.
+        /// </summary>
+        /// <returns>Hash of the entity.</returns>
         override public int GetHashCode() {
             return key.GetHashCode();
         }
