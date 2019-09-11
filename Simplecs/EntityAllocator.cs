@@ -48,12 +48,14 @@ namespace Simplecs {
             return MakeKey(index, generation);
         }
 
-        public void Deallocate(uint key) {
+        public bool Deallocate(uint key) {
             (uint index, byte generation) = DecomposeKey(key);
             if (index != 0 && index < _generations.Count && _generations[(int)index] == generation) {
                 ++_generations[(int)index];
                 AddToFreeList(index);
+                return true;
             }
+            return false;
         }
 
         public bool Validate(uint key) {

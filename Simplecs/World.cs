@@ -24,6 +24,10 @@ namespace Simplecs {
         }
 
         public bool Destroy(Entity entity) {
+            if (!_entityAllocator.Deallocate(entity.key)) {
+                return false;
+            }
+
             bool found = false;
             foreach (var table in _components.Values) {
                 found = table.Remove(entity.key) && found;
@@ -32,13 +36,12 @@ namespace Simplecs {
         }
 
         public void Attach<T>(Entity entity, T component) where T : struct {
-            _components.TryGetValue(typeof(T), out IComponentTable? table);
-            var components = table as ComponentTable<T>;
-            if (components == null) {
-                components = new ComponentTable<T>();
-                _components.Add(components.Type, components);
+            if (!_entityAllocator.Validate(entity.key)) {
+                throw new InvalidOperationException(message:"Invalid entity key");
             }
-            components.Set(entity.key, component);
+
+            var table = GetTable<T>();
+            table.Set(entity.key, component);
         }
 
         public bool Detach<T>(Entity entity) where T : struct {
