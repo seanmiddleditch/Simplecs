@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         dotnet: [ '3.0.100-preview9-014004' ]
+        config: [ Debug, Release ]
         
     steps:
       - uses: actions/checkout@master
@@ -15,6 +16,6 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dotnet }}
-      - run: dotnet build
+      - run: dotnet build -c ${{ matrix.config }}
       - run: dotnet test
       - run: dotnet pack
