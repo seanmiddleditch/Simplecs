@@ -13,8 +13,8 @@ namespace Simplecs {
 
         public bool Destroy(Entity entity) {
             bool found = false;
-            foreach (var (type, components) in _components) {
-
+            foreach (var table in _components.Values) {
+                found = table.Remove(entity.key) && found;
             }
             return found;
         }
