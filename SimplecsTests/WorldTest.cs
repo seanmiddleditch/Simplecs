@@ -32,9 +32,9 @@ namespace SimplecsTests {
             Assert.IsTrue(view2.Any());
             Assert.IsTrue(viewBoth.Any());
 
-            Assert.AreEqual(expected:(new Entity{key=1u}, new Comp1{name="Bob"}), actual:view1.FirstOrDefault());
-            Assert.AreEqual(expected:(new Entity{key=1u}, new Comp2{x=7}), actual:view2.FirstOrDefault());
-            Assert.AreEqual(expected:(new Entity{key=1u}, new Comp1{name="Bob"}, new Comp2{x=7}), actual:viewBoth.FirstOrDefault());
+            Assert.AreEqual(expected:(entity, new Comp1{name="Bob"}), actual:view1.FirstOrDefault());
+            Assert.AreEqual(expected:(entity, new Comp2{x=7}), actual:view2.FirstOrDefault());
+            Assert.AreEqual(expected:(entity, new Comp1{name="Bob"}, new Comp2{x=7}), actual:viewBoth.FirstOrDefault());
         }
     }
 }

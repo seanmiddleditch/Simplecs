@@ -46,27 +46,24 @@ namespace Simplecs {
         public bool Has(Entity entity) {
             int index = EntityUtil.DecomposeIndex(entity);
 
-            return index > 0 &&
-                index < _sparse.Count && 
-                _sparse[(int)index] < _dense.Count &&
-                _dense[_sparse[(int)index]].key == entity.key;
+            return index >= 0 &&
+                index < _sparse.Count &&
+                _sparse[index] < _dense.Count &&
+                _dense[_sparse[index]].key == entity.key;
         }
 
         public bool Remove(Entity entity) {
-            int index = EntityUtil.DecomposeIndex(entity);
-
-            if (index < 0 ||
-                index >= _sparse.Count ||
-                _sparse[(int)index] >= _dense.Count ||
-                _dense[_sparse[(int)index]].key != entity.key) {
+            if (!Has(entity)) {
                 return false;
             }
 
-            int denseIndex = _sparse[(int)index];
+            int index = EntityUtil.DecomposeIndex(entity);
+
+            int denseIndex = _sparse[index];
             (int newSparse, byte _) = EntityUtil.DecomposeKey(_dense[_dense.Count - 1]);
 
-            _sparse[(int)newSparse] = _sparse[(int)index];
-            _sparse[(int)index] = int.MaxValue;
+            _sparse[newSparse] = _sparse[index];
+            _sparse[index] = int.MaxValue;
 
             _dense[denseIndex] = _dense[_dense.Count - 1];
             _data[denseIndex] = _data[_data.Count - 1];
@@ -82,21 +79,17 @@ namespace Simplecs {
         /// <param name="entity">Entity key.</param>
         /// <param name="data">Component data to add.</param>
         public void Set(Entity entity, T data) {
-            int index = EntityUtil.DecomposeIndex(entity);
-
-            if (index > 0 &&
-                index < _sparse.Count && 
-                _sparse[(int)index] < _dense.Count &&
-                _dense[_sparse[(int)index]].key == entity.key) {
-                _data[_sparse[(int)index]] = data;
+            if (Has(entity)) {
+                _data[_sparse[EntityUtil.DecomposeIndex(entity)]] = data;
                 return;
             }
 
+            int index = EntityUtil.DecomposeIndex(entity);
             if (index >= _sparse.Count) {
-                _sparse.AddRange(Enumerable.Repeat(int.MaxValue, (int)index - _sparse.Count + 1));
+                _sparse.AddRange(Enumerable.Repeat(int.MaxValue, index - _sparse.Count + 1));
             }
 
-            _sparse[(int)index] = _dense.Count;
+            _sparse[index] = _dense.Count;
 
             _dense.Add(entity);
             _data.Add(data);
@@ -111,15 +104,15 @@ namespace Simplecs {
         public bool TryGet(Entity entity, out T data) {
             int index = EntityUtil.DecomposeIndex(entity);
 
-            if (index <= 0 ||
+            if (index < 0 ||
                 index >= _sparse.Count ||
-                _sparse[(int)index] >= _dense.Count ||
-                _dense[_sparse[(int)index]].key != entity.key) {
+                _sparse[index] >= _dense.Count ||
+                _dense[_sparse[index]].key != entity.key) {
                 data = default(T);
                 return false;
             }
 
-            data = _data[_sparse[(int)index]];
+            data = _data[_sparse[index]];
             return true;
         }
 

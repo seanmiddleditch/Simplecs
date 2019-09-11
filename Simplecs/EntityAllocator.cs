@@ -18,7 +18,7 @@ namespace Simplecs {
     /// Allocates and maintains a unique set of entity keys.
     /// </summary>
     internal class EntityAllocator {
-        private int _nextIndex = 1;
+        private int _nextIndex = 0;
         private List<int> _freeList = new List<int>();
         private List<byte> _generations = new List<byte>();
         private int _freeHead = 0;
@@ -40,17 +40,22 @@ namespace Simplecs {
             // for new indices, create a new generation.
             //
             if (index >= _generations.Count) {
-                _generations.AddRange(Enumerable.Repeat((byte)0, (int)index - _generations.Count + 1));
+                _generations.AddRange(Enumerable.Repeat((byte)1, index - _generations.Count + 1));
             }
-            byte generation = _generations[(int)index];
+            byte generation = _generations[index];
 
             return EntityUtil.MakeKey(index, generation);
         }
 
         public bool Deallocate(Entity entity) {
             (int index, byte generation) = EntityUtil.DecomposeKey(entity);
-            if (index > 0 && index < _generations.Count && _generations[(int)index] == generation) {
-                ++_generations[(int)index];
+            if (index >= 0 && index < _generations.Count && _generations[index] == generation) {
+                if (++_generations[index] == 0) {
+                    // Ensure generation can never be 0, so we can find
+                    // invalid keys easily.
+                    //
+                    _generations[index] = 1;
+                }
                 AddToFreeList(index);
                 return true;
             }
@@ -59,7 +64,7 @@ namespace Simplecs {
 
         public bool Validate(Entity entity) {
             (int index, byte generation) = EntityUtil.DecomposeKey(entity);
-            return index > 0 && index < _generations.Count &&  _generations[(int)index] == generation;
+            return index >= 0 && index < _generations.Count &&  _generations[index] == generation;
         }
 
         private void AddToFreeList(int index) {
