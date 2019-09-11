@@ -5,7 +5,7 @@ namespace Simplecs {
 
         public Entity Entity => _entity;
 
-        public EntityBuilder(World world, Entity entity) {
+        internal EntityBuilder(World world, Entity entity) {
             _world = world;
             _entity = entity;
         }
