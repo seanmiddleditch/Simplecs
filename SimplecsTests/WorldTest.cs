@@ -3,38 +3,47 @@ using Simplecs;
 using System.Linq;
 
 namespace SimplecsTests {
-    struct Comp1 {
-        public string name;
-    }
-
-    struct Comp2 {
-        public int x;
-    }
-
     public class WorldTest {
         [Test]
         public void Create() {
             var world = new World();
             var entity = world.Create()
-                .Attach(new Comp1{name="Bob"})
-                .Attach(new Comp2{x=7})
+                .Attach(new NameComponent { name = "Bob" })
+                .Attach(new IntComponent { x = 7 })
                 .Entity;
 
             world.Create()
-                .Attach(new Comp1{name="Susan"})
-                .Attach(new Comp2{x=90});
+                .Attach(new NameComponent { name = "Susan" })
+                .Attach(new IntComponent { x = 90 });
 
-            var view1 = new View<Comp1>(world);
-            var view2 = new View<Comp2>(world);
-            var viewBoth = new View<Comp1, Comp2>(world);
+            var names = world.GetTable<NameComponent>();
+            var ints = world.GetTable<IntComponent>();
 
-            Assert.IsTrue(view1.Any());
-            Assert.IsTrue(view2.Any());
-            Assert.IsTrue(viewBoth.Any());
+            Assert.AreEqual(expected: 2, actual: names.Count);
+            Assert.AreEqual(expected: 2, actual: ints.Count);
+        }
 
-            Assert.AreEqual(expected:(entity, new Comp1{name="Bob"}), actual:view1.FirstOrDefault());
-            Assert.AreEqual(expected:(entity, new Comp2{x=7}), actual:view2.FirstOrDefault());
-            Assert.AreEqual(expected:(entity, new Comp1{name="Bob"}, new Comp2{x=7}), actual:viewBoth.FirstOrDefault());
+        [Test]
+        public void Destroy() {
+            var world = new World();
+            var entity = world.Create()
+                .Attach(new NameComponent { name = "Bob" })
+                .Entity;
+
+            world.Create()
+                .Attach(new NameComponent { name = "Susan" })
+                .Attach(new IntComponent { x = 90 });
+
+            var names = world.GetTable<NameComponent>();
+            var ints = world.GetTable<IntComponent>();
+
+            Assert.AreEqual(expected: 2, actual: names.Count);
+            Assert.AreEqual(expected: 1, actual: ints.Count);
+
+            world.Destroy(entity);
+
+            Assert.AreEqual(expected: 1, actual: names.Count);
+            Assert.AreEqual(expected: 1, actual: ints.Count);
         }
     }
 }
