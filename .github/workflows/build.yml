@@ -17,5 +17,9 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet }}
       - run: dotnet build -c ${{ matrix.config }}
-      - run: dotnet test
-      - run: dotnet pack
+        name: Build
+      - run: dotnet test -c ${{ matrix.config }}
+        name: Test
+      - run: dotnet pack -c ${{ matrix.config }} --include-symbols
+        name: Package
+        if: matrix.config == 'Release'
