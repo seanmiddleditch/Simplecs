@@ -46,14 +46,11 @@ namespace Simplecs {
     /// </summary>
     /// <typeparam name="T">Struct type containing component data.</typeparam>
     internal class ComponentTable<T> : IComponentTable, IEnumerable<(Entity, T)> where T : struct {
-        private List<T> _data = new List<T>();
+        private ChunkedStorage<T> _data = new ChunkedStorage<T>();
         private List<Entity> _dense = new List<Entity>();
         private List<int> _sparse = new List<int>();
 
         public Type Type => typeof(T);
-
-        public IReadOnlyList<Entity> Entities => _dense;
-        public IReadOnlyList<T> Components => _data;
 
         public int Count => _dense.Count;
 
