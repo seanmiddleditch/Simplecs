@@ -14,36 +14,54 @@ using System;
 using System.Collections.Generic;
 
 namespace Simplecs {
+    /// <summary>
+    /// Contains a collection of entities and associated components.
+    /// </summary>
     public class World {
         private EntityAllocator _entityAllocator = new EntityAllocator();
         private Dictionary<Type, IComponentTable> _components = new Dictionary<Type, IComponentTable>();
 
-        public EntityBuilder Create() {
-            Entity entity = _entityAllocator.Allocate();
-            return new EntityBuilder(world:this, entity:entity);
-        }
+        /// <summary>
+        /// Creates a new entity.
+        /// </summary>
+        /// <returns>A builder object that can be used to attach components or extract the id.</returns>
+        public EntityBuilder Create() => new EntityBuilder(world: this, entity: _entityAllocator.Allocate());
 
+        /// <summary>
+        /// Destroys a given entity and all associated components.
+        /// </summary>
+        /// <param name="entity">Entity to destroy</param>
+        /// <returns>True if the given entity was found and destroyed.</returns>
         public bool Destroy(Entity entity) {
             if (!_entityAllocator.Deallocate(entity)) {
                 return false;
             }
 
-            bool found = false;
             foreach (var table in _components.Values) {
-                found = table.Remove(entity) && found;
+                table.Remove(entity);
             }
-            return found;
+            return true;
         }
 
-        public void Attach<T>(Entity entity, T component) where T : struct {
+        /// <summary>
+        /// Attaches a component to an existing entity.
+        /// </summary>
+        /// <param name="entity">Entity the component will be attached to.</param>
+        /// <param name="component">Component to attach.</param>
+        public void Attach<T>(Entity entity, in T component) where T : struct {
             if (!_entityAllocator.Validate(entity)) {
-                throw new InvalidOperationException(message:"Invalid entity key");
+                throw new InvalidOperationException(message: "Invalid entity key");
             }
 
             var table = GetTable<T>();
-            table.Set(entity, component);
+            table.Add(entity, component);
         }
 
+        /// <summary>
+        /// Removes a component from an existing entity.
+        /// </summary>
+        /// <param name="entity">Entity whose component should be destroyed.</param>
+        /// <returns>True if the given component was found and destroyed.</returns>
         public bool Detach<T>(Entity entity) where T : struct {
             _components.TryGetValue(typeof(T), out IComponentTable? table);
             var components = table as ComponentTable<T>;
