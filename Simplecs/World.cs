@@ -47,14 +47,6 @@ namespace Simplecs {
             return components != null && components.Remove(entity.key);
         }
 
-        public T? Fetch<T>(Entity entity) where T : struct {
-            var components = Components<T>();
-            if (components.TryGet(entity.key, out T data)) {
-                return data;
-            }
-            return null;
-        }
-
         internal ComponentTable<T> Components<T>() where T : struct {
             if (_components.TryGetValue(typeof(T), out IComponentTable? generic) && generic is ComponentTable<T> typed) {
                 return typed;
