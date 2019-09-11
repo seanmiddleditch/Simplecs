@@ -14,26 +14,57 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Simplecs {
+    /// <summary>
+    /// Stores a collection of values in semi-contiguous but stable memory.
+    /// 
+    /// Backing stores are allocated in fixed-sized chunks. This storage can
+    /// be indexed efficiently in O(1). Further, insertion is always append and
+    /// also O(1), and removal always uses swap-and-pop and is also O(1).
+    /// 
+    /// Note that as consequence, ordering is _not_ maintained in this container.
+    /// </summary>
+    /// <typeparam name="T">Type stored.</typeparam>
     public class ChunkedStorage<T> where T : struct {
         private List<T[]> _chunks = new List<T[]>();
         private List<int> _chunkCounts = new List<int>();
         private int _chunkElementCount = 1024;
         private int _count = 0;
 
+        /// <summary>
+        /// Default size of chunks in bytes.
+        /// </summary>
         public const int defaultChunkSize = 16 * 1024;
 
+        /// <summary>
+        /// Number of elements stored.
+        /// </summary>
         public int Count => _count;
 
+        /// <summary>
+        /// Creates a new chunked storage container.
+        /// </summary>
+        /// <param name="chunkSize">Size of chunks in bytes.</param>
         public ChunkedStorage(int chunkSize = defaultChunkSize) {
             int elementSize = Marshal.SizeOf<T>();
             _chunkElementCount = chunkSize / elementSize;
         }
 
+        /// <summary>
+        /// Adds a value to container.
+        /// </summary>
+        /// <param name="value">Value to add.</param>
         public void Add(in T value) {
             var (chunk, index) = AllocateSlot();
             chunk[index] = value;
         }
 
+        /// <summary>
+        /// Removes an element at a given index.
+        /// 
+        /// This will swap in the last element in the container and
+        /// hence mutates the order of elements.
+        /// </summary>
+        /// <param name="index">Index at which to remove an item.</param>
         public void RemoveAt(int index) {
             if (index < 0 || index >= _count) {
                 return;
@@ -50,6 +81,9 @@ namespace Simplecs {
             --_chunkCounts[_chunkCounts.Count - 1];
         }
 
+        /// <summary>
+        /// Removes all values from the container.
+        /// </summary>
         public void Clear() {
             _count = 0;
             for (int index = 0; index != _chunkCounts.Count; ++index) {
@@ -57,6 +91,9 @@ namespace Simplecs {
             }
         }
 
+        /// <summary>
+        /// Accesses the value at the given index.
+        /// </summary>
         public ref T this[int index] => ref _chunks[index / _chunkElementCount][index % _chunkElementCount];
 
         private (T[] chunk, int index) AllocateSlot() {
