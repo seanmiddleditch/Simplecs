@@ -13,6 +13,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Simplecs {
@@ -23,13 +24,21 @@ namespace Simplecs {
         /// <value>Type of the component data stored in this table.</value>
         Type Type { get; }
 
+        /// <value>Number of components stored in table.</value>
+        int Count { get; }
+
         /// <param name="entity">Entity key.</param>
         /// <returns>True if a component is stored for this key.</returns>
-        bool Has(Entity entity);
+        bool Contains(Entity entity);
 
         /// <param name="entity">Entity key.</param>
         /// <returns>True if a component was stored for this key and is now removed.</returns>
         bool Remove(Entity entity);
+
+        /// <summary>
+        /// Removes all components.
+        /// </summary>
+        void Clear();
     }
 
     /// <summary>
@@ -37,13 +46,20 @@ namespace Simplecs {
     /// </summary>
     /// <typeparam name="T">Struct type containing component data.</typeparam>
     internal class ComponentTable<T> : IComponentTable, IEnumerable<(Entity, T)> where T : struct {
-        private List<T> _data = new List<T>();
+        private ChunkedStorage<T> _data = new ChunkedStorage<T>();
         private List<Entity> _dense = new List<Entity>();
         private List<int> _sparse = new List<int>();
+#if DEBUG
+        private int _version = 0;
+#endif
+
+        public delegate void Callback(Entity entity, ref T component);
 
         public Type Type => typeof(T);
 
-        public bool Has(Entity entity) {
+        public int Count => _dense.Count;
+
+        public bool Contains(Entity entity) {
             int index = EntityUtil.DecomposeIndex(entity);
 
             return index >= 0 &&
@@ -53,14 +69,14 @@ namespace Simplecs {
         }
 
         public bool Remove(Entity entity) {
-            if (!Has(entity)) {
+            if (!Contains(entity)) {
                 return false;
             }
 
             int index = EntityUtil.DecomposeIndex(entity);
 
             int denseIndex = _sparse[index];
-            (int newSparse, byte _) = EntityUtil.DecomposeKey(_dense[_dense.Count - 1]);
+            int newSparse = EntityUtil.DecomposeIndex(_dense[_dense.Count - 1]);
 
             _sparse[newSparse] = _sparse[index];
             _sparse[index] = int.MaxValue;
@@ -70,6 +86,9 @@ namespace Simplecs {
 
             _dense.RemoveAt(_dense.Count - 1);
             _data.RemoveAt(_data.Count - 1);
+#if DEBUG
+            ++_version;
+#endif
             return true;
         }
 
@@ -78,8 +97,8 @@ namespace Simplecs {
         /// </summary>
         /// <param name="entity">Entity key.</param>
         /// <param name="data">Component data to add.</param>
-        public void Set(Entity entity, T data) {
-            if (Has(entity)) {
+        public void Add(Entity entity, in T data) {
+            if (Contains(entity)) {
                 _data[_sparse[EntityUtil.DecomposeIndex(entity)]] = data;
                 return;
             }
@@ -93,6 +112,9 @@ namespace Simplecs {
 
             _dense.Add(entity);
             _data.Add(data);
+#if DEBUG
+            ++_version;
+#endif
         }
 
         /// <summary>
@@ -121,13 +143,53 @@ namespace Simplecs {
         /// </summary>
         /// <returns>Enumerator of (key, component) tuples.</returns>
         public IEnumerator<(Entity, T)> GetEnumerator() {
+#if DEBUG
+            int version = _version;
+#endif
+
             for (int index = 0; index != _data.Count; ++index) {
+#if DEBUG
+                if (version != _version) {
+                    throw new InvalidOperationException(message:"Enumerating a modified collection.");
+                }
+#endif
+
                 yield return (_dense[index], _data[index]);
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();
+        }
+
+        public ref T this[Entity entity] => ref _data[EntityUtil.DecomposeIndex(entity)];
+
+        /// <summary>
+        /// Iterates all stored components.
+        /// </summary>
+        /// <param name="callback">Invoked for each entity/component pair in table.</param>
+        public void Each(Callback callback) {
+#if DEBUG
+            int version = _version;
+#endif
+
+            for (int index = 0; index != _data.Count; ++index) {
+#if DEBUG
+                if (version != _version) {
+                    throw new InvalidOperationException(message:"Enumerating a modified collection.");
+                }
+#endif
+
+                callback(_dense[index], ref _data[index]);
+            }
+        }
+
+        public void Clear() {
+            _data.Clear();
+            _dense.Clear();
+#if DEBUG
+            ++_version;
+#endif
         }
     }
 }

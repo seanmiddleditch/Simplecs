@@ -31,7 +31,7 @@ namespace Simplecs {
         /// <summary>
         /// Attaches a component to the newly created entity.
         /// </summary>
-        public EntityBuilder Attach<T>(T component) where T : struct {
+        public EntityBuilder Attach<T>(in T component) where T : struct {
             _world.Attach(_entity, component);
             return this;
         }
