@@ -23,12 +23,18 @@ namespace Simplecs {
 
         public View(World world) => _table = world.GetTable<T>();
 
+        public delegate void Callback(Entity entity, ref T component);
+
         public IEnumerator<(Entity, T)> GetEnumerator() {
             return _table.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();
+        }
+
+        public void Each(Callback callback) {
+            _table.Each((Entity entity, ref T component) => callback(entity, ref component));
         }
     }
 
@@ -40,6 +46,8 @@ namespace Simplecs {
     public class View<T1, T2> : IEnumerable<(Entity, T1, T2)> where T1 : struct where T2 : struct {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
+
+        public delegate void Callback(Entity entity, ref T1 component1, ref T2 component2);
 
         public View(World world) {
             _table1 = world.GetTable<T1>();
@@ -56,6 +64,14 @@ namespace Simplecs {
 
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();
+        }
+
+        public void Each(Callback callback) {
+            _table1.Each((Entity entity, ref T1 component1) => {
+                if (_table2.Contains(entity)) {
+                    callback(entity, ref component1, ref _table2[entity]);
+                }
+            });
         }
     }
 }

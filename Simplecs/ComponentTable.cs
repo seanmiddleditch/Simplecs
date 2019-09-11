@@ -162,6 +162,8 @@ namespace Simplecs {
             return this.GetEnumerator();
         }
 
+        public ref T this[Entity entity] => ref _data[EntityUtil.DecomposeIndex(entity)];
+
         /// <summary>
         /// Iterates all stored components.
         /// </summary>
