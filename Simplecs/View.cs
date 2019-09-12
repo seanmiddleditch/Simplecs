@@ -20,20 +20,13 @@ namespace Simplecs {
     /// Supplies functionality for views of all arities.
     /// </summary>
     public abstract class ViewBase {
-        private World _world;
         private List<IComponentTable> _required = new List<IComponentTable>();
         private List<IComponentTable> _excluded = new List<IComponentTable>();
 
-        /// <param name="world">World for this View.</param>
-        protected ViewBase(World world) => _world = world;
-
-        /// <summary>
-        /// World which this view inspects.
-        /// </summary>
-        public World World => _world;
-
-        internal void Exclude<T>() where T : struct => _excluded.Add(_world.GetTable<T>());
-        internal void Require<T>() where T : struct => _required.Add(_world.GetTable<T>());
+        internal ViewBase(List<IComponentTable>? excluded, List<IComponentTable>? required) {
+            _required = required ?? _required;
+            _excluded = excluded ?? _excluded;
+        }
 
         internal bool IsAllowed(Entity entity) => !IsExcluded(entity) && HasRequired(entity);
 
@@ -63,11 +56,7 @@ namespace Simplecs {
     public sealed class View<T> : ViewBase, IEnumerable<(Entity, T)> where T : struct {
         private ComponentTable<T> _table;
 
-        /// <summary>
-        /// Constructs a new view over a single component type.
-        /// </summary>
-        /// <param name="world">World this view inspects.</param>
-        public View(World world) : base(world) => _table = world.GetTable<T>();
+        internal View(ComponentTable<T> table, List<IComponentTable>? excluded = null, List<IComponentTable>? required = null) : base(excluded: excluded, required: required) => _table = table;
 
         /// <summary>
         /// Callback for the Each method.
@@ -75,16 +64,6 @@ namespace Simplecs {
         /// <param name="entity">Matched entity.</param>
         /// <param name="component">Component reference of matched entity.</param>
         public delegate void Callback(Entity entity, ref T component);
-
-        /// <summary>
-        /// Excludes the specified component from the matched set.
-        /// </summary>
-        new public View<T> Exclude<U>() where U : struct { base.Exclude<U>(); return this; }
-
-        /// <summary>
-        /// Marks the specified as required for the matched set.
-        /// </summary>
-        new public View<T> Require<U>() where U : struct { base.Require<U>(); return this; }
 
         /// <summary>
         /// Enumerator for matched entities and components.
@@ -136,23 +115,9 @@ namespace Simplecs {
         /// <param name="component2">Second component reference of matched entity.</param>
         public delegate void Callback(Entity entity, ref T1 component1, ref T2 component2);
 
-        /// <summary>
-        /// Excludes the specified component from the matched set.
-        /// </summary>
-        new public View<T1, T2> Exclude<U>() where U : struct { base.Exclude<U>(); return this; }
-
-        /// <summary>
-        /// Marks the specified as required for the matched set.
-        /// </summary>
-        new public View<T1, T2> Require<U>() where U : struct { base.Require<U>(); return this; }
-
-        /// <summary>
-        /// Constructs a new view over a single component type.
-        /// </summary>
-        /// <param name="world">World this view inspects.</param>
-        public View(World world) : base(world) {
-            _table1 = world.GetTable<T1>();
-            _table2 = world.GetTable<T2>();
+        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, List<IComponentTable>? excluded = null, List<IComponentTable>? required = null) : base(excluded: excluded, required: required) {
+            _table1 = table1;
+            _table2 = table2;
         }
 
         /// <summary>
@@ -208,24 +173,10 @@ namespace Simplecs {
         /// <param name="component3">Third component reference of matched entity.</param>
         public delegate void Callback(Entity entity, ref T1 component1, ref T2 component2, ref T3 component3);
 
-        /// <summary>
-        /// Excludes the specified component from the matched set.
-        /// </summary>
-        new public View<T1, T2, T3> Exclude<U>() where U : struct { base.Exclude<U>(); return this; }
-
-        /// <summary>
-        /// Marks the specified as required for the matched set.
-        /// </summary>
-        new public View<T1, T2, T3> Require<U>() where U : struct { base.Require<U>(); return this; }
-
-        /// <summary>
-        /// Constructs a new view over a single component type.
-        /// </summary>
-        /// <param name="world">World this view inspects.</param>
-        public View(World world) : base(world) {
-            _table1 = world.GetTable<T1>();
-            _table2 = world.GetTable<T2>();
-            _table3 = world.GetTable<T3>();
+        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, List<IComponentTable>? excluded, List<IComponentTable>? required) : base(excluded: excluded, required: required) {
+            _table1 = table1;
+            _table2 = table2;
+            _table3 = table3;
         }
 
         /// <summary>
