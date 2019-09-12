@@ -168,6 +168,7 @@ namespace Simplecs {
         }
 
         public ref T this[Entity entity] => ref _data[_sparse[EntityUtil.DecomposeIndex(entity)]];
+        public Entity this[int index] => _dense[index];
 
         /// <summary>
         /// Iterates all stored components.

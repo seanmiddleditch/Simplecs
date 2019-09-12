@@ -14,9 +14,9 @@ namespace SimplecsTests {
             var view = world.CreateView().Select<IntComponent>();
             view.Each((Entity _, ref IntComponent comp) => comp.x *= comp.x);
 
-            Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Item2.x);
-            Assert.AreEqual(expected: 4, actual: view.ElementAt(1).Item2.x);
-            Assert.AreEqual(expected: 9, actual: view.ElementAt(2).Item2.x);
+            Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Component.x);
+            Assert.AreEqual(expected: 4, actual: view.ElementAt(1).Component.x);
+            Assert.AreEqual(expected: 9, actual: view.ElementAt(2).Component.x);
         }
 
         [Test]
@@ -29,8 +29,8 @@ namespace SimplecsTests {
 
             var view = world.CreateView().Require<NameComponent>().Select<IntComponent>();
 
-            Assert.AreEqual(expected: 2, actual: view.ElementAt(0).Item2.x);
-            Assert.AreEqual(expected: 4, actual: view.ElementAt(1).Item2.x);
+            Assert.AreEqual(expected: 2, actual: view.ElementAt(0).Component.x);
+            Assert.AreEqual(expected: 4, actual: view.ElementAt(1).Component.x);
         }
 
         [Test]
@@ -43,8 +43,8 @@ namespace SimplecsTests {
 
             var view = world.CreateView().Exclude<NameComponent>().Select<IntComponent>();
 
-            Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Item2.x);
-            Assert.AreEqual(expected: 3, actual: view.ElementAt(1).Item2.x);
+            Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Component.x);
+            Assert.AreEqual(expected: 3, actual: view.ElementAt(1).Component.x);
         }
 
         [Test]
@@ -67,8 +67,8 @@ namespace SimplecsTests {
             Assert.IsTrue(intView.Any());
             Assert.IsTrue(bothView.Any());
 
-            Assert.AreEqual(expected: (entity, new NameComponent { name = "Bob" }), actual: nameView.FirstOrDefault());
-            Assert.AreEqual(expected: (entity, new IntComponent { x = 7 }), actual: intView.FirstOrDefault());
+            Assert.AreEqual(expected: new NameComponent { name = "Bob" }, actual: nameView.FirstOrDefault().Component);
+            Assert.AreEqual(expected: new IntComponent { x = 7 }, actual: intView.FirstOrDefault().Component);
             Assert.AreEqual(expected: (entity, new NameComponent { name = "Bob" }, new IntComponent { x = 7 }), actual: bothView.FirstOrDefault());
         }
     }
