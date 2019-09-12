@@ -17,27 +17,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Simplecs {
-    /// <summary>
-    /// Safe readonly view of a component table that will never cause an allocation.
-    /// </summary>
     internal interface IComponentTable {
-        /// <value>Type of the component data stored in this table.</value>
         Type Type { get; }
-
-        /// <value>Number of components stored in table.</value>
         int Count { get; }
 
-        /// <param name="entity">Entity key.</param>
-        /// <returns>True if a component is stored for this key.</returns>
         bool Contains(Entity entity);
-
-        /// <param name="entity">Entity key.</param>
-        /// <returns>True if a component was stored for this key and is now removed.</returns>
         bool Remove(Entity entity);
-
-        /// <summary>
-        /// Removes all components.
-        /// </summary>
+        void Add(Entity entity, object component);
+        bool TryGet(Entity entity, out object data);
         void Clear();
     }
 
@@ -115,6 +102,24 @@ namespace Simplecs {
 #if DEBUG
             ++_version;
 #endif
+        }
+
+        void IComponentTable.Add(Entity entity, object component) {
+            if (component.GetType() != typeof(T)) {
+                throw new InvalidOperationException(message:"Incorrect component type");
+            }
+
+            Add(entity, (T)component);
+        }
+
+        bool IComponentTable.TryGet(Entity entity, out object data) {
+            if (!TryGet(entity, out T component)) {
+                data = false;
+                return false;
+            }
+
+            data = component;
+            return true;
         }
 
         /// <summary>
