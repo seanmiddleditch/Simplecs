@@ -35,6 +35,10 @@ namespace Simplecs {
         /// <returns>True if a component was stored for this key and is now removed.</returns>
         bool Remove(Entity entity);
 
+        void Add(Entity entity, object component);
+
+        bool TryGet(Entity entity, out object data);
+
         /// <summary>
         /// Removes all components.
         /// </summary>
@@ -115,6 +119,24 @@ namespace Simplecs {
 #if DEBUG
             ++_version;
 #endif
+        }
+
+        void IComponentTable.Add(Entity entity, object component) {
+            if (component.GetType() != typeof(T)) {
+                throw new InvalidOperationException(message:"Incorrect component type");
+            }
+
+            Add(entity, (T)component);
+        }
+
+        bool IComponentTable.TryGet(Entity entity, out object data) {
+            if (!TryGet(entity, out T component)) {
+                data = false;
+                return false;
+            }
+
+            data = component;
+            return true;
         }
 
         /// <summary>

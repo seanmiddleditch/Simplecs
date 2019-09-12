@@ -74,6 +74,20 @@ namespace Simplecs {
         }
 
         /// <summary>
+        /// Attaches a component to an existing entity.
+        /// </summary>
+        /// <param name="entity">Entity the component will be attached to.</param>
+        /// <param name="component">Component to attach.</param>
+        public void Attach(Entity entity, object component) {
+            if (!_entityAllocator.Validate(entity)) {
+                throw new InvalidOperationException(message: "Invalid entity key");
+            }
+
+            var table = GetTable(component.GetType());
+            table.Add(entity, component);
+        }
+
+        /// <summary>
         /// Removes a component from an existing entity.
         /// </summary>
         /// <param name="entity">Entity whose component should be destroyed.</param>
@@ -84,6 +98,28 @@ namespace Simplecs {
             return components != null && components.Remove(entity);
         }
 
+        /// <summary>
+        /// Enumerates all the components attached to a given entity.
+        /// 
+        /// Note that these are returned as objects, so boxing for each component will
+        /// be involved! Further, modifications to these instances will not apply
+        /// automatically to the stored components; if modified, components should be
+        /// re-Attached.
+        /// </summary>
+        /// <param name="entity">Entity whose components should be enumerated.</param>
+        /// <returns>Iterator of boxed copies of the component on the entity.</returns>
+        public IEnumerable<object> ComponentsOn(Entity entity) {
+            if (!_entityAllocator.Validate(entity)) {
+                throw new InvalidOperationException(message: "Invalid entity key");
+            }
+
+            foreach ((var _, IComponentTable table) in _components) {
+                if (table.TryGet(entity, out object data)) {
+                    yield return data;
+                }
+            }
+        }
+
         internal ComponentTable<T> GetTable<T>() where T : struct {
             if (_components.TryGetValue(typeof(T), out IComponentTable? generic) && generic is ComponentTable<T> typed) {
                 return typed;
@@ -92,6 +128,33 @@ namespace Simplecs {
             var table = new ComponentTable<T>();
             _components.Add(table.Type, table);
             return table;
+        }
+
+        internal IComponentTable GetTable(Type type) {
+            if (_components.TryGetValue(type, out IComponentTable? generic) && generic != null) {
+                return generic;
+            }
+
+            var table = CreateTable(type);
+            _components.Add(table.Type, table);
+            return table;
+        }
+
+        private IComponentTable CreateTable(Type type) {
+            if (!type.IsValueType) {
+                throw new InvalidOperationException(message: "Component types must be value types");
+            }
+
+            var tableGenericType = typeof(ComponentTable<>);
+            var tableType = tableGenericType.MakeGenericType(type);
+
+            var tableObject = Activator.CreateInstance(tableType);
+            var table = tableType as IComponentTable;
+            if (table == null) {
+                throw new InvalidCastException(message: "Failed to cast created table to IComponentTable");
+            }
+
+            return (IComponentTable)table;
         }
     }
 }
