@@ -7,12 +7,12 @@ namespace SimplecsTests {
         [Test]
         public void Create() {
             var world = new World();
-            var entity = world.Create()
+            var entity = world.CreateEntity()
                 .Attach(new NameComponent { name = "Bob" })
                 .Attach(new IntComponent { x = 7 })
                 .Entity;
 
-            world.Create()
+            world.CreateEntity()
                 .Attach(new NameComponent { name = "Susan" })
                 .Attach(new IntComponent { x = 90 });
 
@@ -26,11 +26,11 @@ namespace SimplecsTests {
         [Test]
         public void Destroy() {
             var world = new World();
-            var entity = world.Create()
+            var entity = world.CreateEntity()
                 .Attach(new NameComponent { name = "Bob" })
                 .Entity;
 
-            world.Create()
+            world.CreateEntity()
                 .Attach(new NameComponent { name = "Susan" })
                 .Attach(new IntComponent { x = 90 });
 

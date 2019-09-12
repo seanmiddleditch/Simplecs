@@ -1,0 +1,72 @@
+// Simplecs - Simple ECS for C#
+//
+// Written in 2019 by Sean Middleditch (http://github.com/seanmiddleditch)
+//
+// To the extent possible under law, the author(s) have dedicated all copyright
+// and related and neighboring rights to this software to the public domain
+// worldwide. This software is distributed without any warranty.
+//
+// You should have received a copy of the CC0 Public Domain Dedication along
+// with this software. If not, see
+// <http://creativecommons.org/publicdomain/zero/1.0/>.
+
+using System.Collections.Generic;
+
+namespace Simplecs {
+    /// <summary>
+    /// Builder for a View object.
+    /// 
+    /// Options for required and excluded components can be set.
+    /// 
+    /// The Select method creates the View.
+    /// </summary>
+    public class ViewBuilder {
+        private World _world;
+        private ViewPredicate? _predicate;
+
+        internal ViewBuilder(World world) => _world = world;
+
+        /// <summary>
+        /// Marks the specified component as required for the view,
+        /// though it will not be in the selected component set.
+        /// </summary>
+        public ViewBuilder Require<T>() where T : struct {
+            _predicate ??= new ViewPredicate();
+            _predicate.Require(_world.GetTable<T>());
+            return this;
+        }
+
+        /// <summary>
+        /// Marks the specified component as excluded for the view,
+        /// meaning that it cannot be present on matched entities.
+        /// </summary>
+        public ViewBuilder Exclude<T>() where T : struct {
+            _predicate ??= new ViewPredicate();
+            _predicate.Exclude(_world.GetTable<T>());
+            return this;
+        }
+
+        /// <summary>
+        /// Creates a View that selects the specified component.
+        /// </summary>
+        public View<T> Select<T>() where T : struct => new View<T>(Table<T>(), Predicate());
+
+        /// <summary>
+        /// Creates a View that selects the specified components.
+        /// </summary>
+        public View<T1, T2> Select<T1, T2>() where T1 : struct where T2 : struct => new View<T1, T2>(Table<T1>(), Table<T2>(), Predicate());
+
+        /// <summary>
+        /// Creates a View that selects the specified components.
+        /// </summary>
+        public View<T1, T2, T3> Select<T1, T2, T3>() where T1 : struct where T2 : struct where T3 : struct => new View<T1, T2, T3>(Table<T1>(), Table<T2>(), Table<T3>(), Predicate());
+
+        private ViewPredicate Predicate() {
+            var predicate = _predicate ?? new ViewPredicate();
+            _predicate = null;
+            return predicate;
+        }
+
+        private ComponentTable<T> Table<T>() where T : struct => _world.GetTable<T>();
+    }
+}

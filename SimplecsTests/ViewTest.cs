@@ -7,11 +7,11 @@ namespace SimplecsTests {
         [Test]
         public void EachMutable() {
             var world = new World();
-            world.Create().Attach(new IntComponent { x = 1 });
-            world.Create().Attach(new IntComponent { x = 2 });
-            world.Create().Attach(new IntComponent { x = 3 });
+            world.CreateEntity().Attach(new IntComponent { x = 1 });
+            world.CreateEntity().Attach(new IntComponent { x = 2 });
+            world.CreateEntity().Attach(new IntComponent { x = 3 });
 
-            var view = new View<IntComponent>(world);
+            var view = world.CreateView().Select<IntComponent>();
             view.Each((Entity _, ref IntComponent comp) => comp.x *= comp.x);
 
             Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Item2.x);
@@ -22,12 +22,12 @@ namespace SimplecsTests {
         [Test]
         public void Require() {
             var world = new World();
-            world.Create().Attach(new IntComponent { x = 1 });
-            world.Create().Attach(new NameComponent { name = "Bob" }).Attach(new IntComponent { x = 2 });
-            world.Create().Attach(new IntComponent { x = 3 });
-            world.Create().Attach(new NameComponent { name = "Susan" }).Attach(new IntComponent { x = 4 });
+            world.CreateEntity().Attach(new IntComponent { x = 1 });
+            world.CreateEntity().Attach(new NameComponent { name = "Bob" }).Attach(new IntComponent { x = 2 });
+            world.CreateEntity().Attach(new IntComponent { x = 3 });
+            world.CreateEntity().Attach(new NameComponent { name = "Susan" }).Attach(new IntComponent { x = 4 });
 
-            var view = new View<IntComponent>(world).Require<NameComponent>();
+            var view = world.CreateView().Require<NameComponent>().Select<IntComponent>();
 
             Assert.AreEqual(expected: 2, actual: view.ElementAt(0).Item2.x);
             Assert.AreEqual(expected: 4, actual: view.ElementAt(1).Item2.x);
@@ -36,12 +36,12 @@ namespace SimplecsTests {
         [Test]
         public void Exclude() {
             var world = new World();
-            world.Create().Attach(new NameComponent { name = "Bob" }).Attach(new IntComponent { x = 2 });
-            world.Create().Attach(new IntComponent { x = 1 });
-            world.Create().Attach(new NameComponent { name = "Susan" }).Attach(new IntComponent { x = 4 });
-            world.Create().Attach(new IntComponent { x = 3 });
+            world.CreateEntity().Attach(new NameComponent { name = "Bob" }).Attach(new IntComponent { x = 2 });
+            world.CreateEntity().Attach(new IntComponent { x = 1 });
+            world.CreateEntity().Attach(new NameComponent { name = "Susan" }).Attach(new IntComponent { x = 4 });
+            world.CreateEntity().Attach(new IntComponent { x = 3 });
 
-            var view = new View<IntComponent>(world).Exclude<NameComponent>();
+            var view = world.CreateView().Exclude<NameComponent>().Select<IntComponent>();
 
             Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Item2.x);
             Assert.AreEqual(expected: 3, actual: view.ElementAt(1).Item2.x);
@@ -50,18 +50,18 @@ namespace SimplecsTests {
         [Test]
         public void Match() {
             var world = new World();
-            var entity = world.Create()
+            var entity = world.CreateEntity()
                 .Attach(new NameComponent { name = "Bob" })
                 .Attach(new IntComponent { x = 7 })
                 .Entity;
 
-            world.Create()
+            world.CreateEntity()
                 .Attach(new NameComponent { name = "Susan" })
                 .Attach(new IntComponent { x = 90 });
 
-            var nameView = new View<NameComponent>(world);
-            var intView = new View<IntComponent>(world);
-            var bothView = new View<NameComponent, IntComponent>(world);
+            var nameView = world.CreateView().Select<NameComponent>();
+            var intView = world.CreateView().Select<IntComponent>();
+            var bothView = world.CreateView().Select<NameComponent, IntComponent>();
 
             Assert.IsTrue(nameView.Any());
             Assert.IsTrue(intView.Any());

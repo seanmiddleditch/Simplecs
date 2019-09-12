@@ -25,7 +25,13 @@ namespace Simplecs {
         /// Creates a new entity.
         /// </summary>
         /// <returns>A builder object that can be used to attach components or extract the id.</returns>
-        public EntityBuilder Create() => new EntityBuilder(world: this, entity: _entityAllocator.Allocate());
+        public EntityBuilder CreateEntity() => new EntityBuilder(world: this, entity: _entityAllocator.Allocate());
+
+        /// <summary>
+        /// Creates a new view builder.
+        /// </summary>
+        /// <returns>A builder object used to construct a view.</returns>
+        public ViewBuilder CreateView() => new ViewBuilder(this);
 
         /// <summary>
         /// Destroys a given entity and all associated components.
@@ -40,8 +46,18 @@ namespace Simplecs {
             foreach (var table in _components.Values) {
                 table.Remove(entity);
             }
+
             return true;
         }
+
+        /// <summary>
+        /// Checks if a given entity exists.
+        /// 
+        /// The entity may have no components, however.
+        /// </summary>
+        /// <param name="entity">Entity to test.</param>
+        /// <returns>True if the entity exists.</returns>
+        public bool Exists(Entity entity) => _entityAllocator.Validate(entity);
 
         /// <summary>
         /// Attaches a component to an existing entity.
