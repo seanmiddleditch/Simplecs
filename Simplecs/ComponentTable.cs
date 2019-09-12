@@ -32,22 +32,22 @@ namespace Simplecs {
     /// <typeparam name="T">Struct type containing component data.</typeparam>
     internal class ComponentTable<T> : IComponentTable where T : struct {
         private ChunkedStorage<T> _data = new ChunkedStorage<T>();
-        private List<Entity> _dense = new List<Entity>();
-        private List<int> _sparse = new List<int>();
+        private List<Entity> _entities = new List<Entity>();
+        private List<int> _mapping = new List<int>();
 
         public delegate void Callback(Entity entity, ref T component);
 
         public Type Type => typeof(T);
 
-        public int Count => _dense.Count;
+        public int Count => _entities.Count;
 
         public bool Contains(Entity entity) {
             int index = EntityUtil.DecomposeIndex(entity);
 
             return index >= 0 &&
-                index < _sparse.Count &&
-                _sparse[index] < _dense.Count &&
-                _dense[_sparse[index]].key == entity.key;
+                index < _mapping.Count &&
+                _mapping[index] < _entities.Count &&
+                _entities[_mapping[index]].key == entity.key;
         }
 
         public bool Remove(Entity entity) {
@@ -57,16 +57,16 @@ namespace Simplecs {
 
             int index = EntityUtil.DecomposeIndex(entity);
 
-            int denseIndex = _sparse[index];
-            int newSparse = EntityUtil.DecomposeIndex(_dense[_dense.Count - 1]);
+            int denseIndex = _mapping[index];
+            int newSparse = EntityUtil.DecomposeIndex(_entities[_entities.Count - 1]);
 
-            _sparse[newSparse] = _sparse[index];
-            _sparse[index] = int.MaxValue;
+            _mapping[newSparse] = _mapping[index];
+            _mapping[index] = int.MaxValue;
 
-            _dense[denseIndex] = _dense[_dense.Count - 1];
+            _entities[denseIndex] = _entities[_entities.Count - 1];
             _data[denseIndex] = _data[_data.Count - 1];
 
-            _dense.RemoveAt(_dense.Count - 1);
+            _entities.RemoveAt(_entities.Count - 1);
             _data.RemoveAt(_data.Count - 1);
             return true;
         }
@@ -78,18 +78,18 @@ namespace Simplecs {
         /// <param name="data">Component data to add.</param>
         public void Add(Entity entity, in T data) {
             if (Contains(entity)) {
-                _data[_sparse[EntityUtil.DecomposeIndex(entity)]] = data;
+                _data[_mapping[EntityUtil.DecomposeIndex(entity)]] = data;
                 return;
             }
 
             int index = EntityUtil.DecomposeIndex(entity);
-            if (index >= _sparse.Count) {
-                _sparse.AddRange(Enumerable.Repeat(int.MaxValue, index - _sparse.Count + 1));
+            if (index >= _mapping.Count) {
+                _mapping.AddRange(Enumerable.Repeat(int.MaxValue, index - _mapping.Count + 1));
             }
 
-            _sparse[index] = _dense.Count;
+            _mapping[index] = _entities.Count;
 
-            _dense.Add(entity);
+            _entities.Add(entity);
             _data.Add(data);
         }
 
@@ -121,23 +121,23 @@ namespace Simplecs {
             int index = EntityUtil.DecomposeIndex(entity);
 
             if (index < 0 ||
-                index >= _sparse.Count ||
-                _sparse[index] >= _dense.Count ||
-                _dense[_sparse[index]].key != entity.key) {
+                index >= _mapping.Count ||
+                _mapping[index] >= _entities.Count ||
+                _entities[_mapping[index]].key != entity.key) {
                 data = default(T);
                 return false;
             }
 
-            data = _data[_sparse[index]];
+            data = _data[_mapping[index]];
             return true;
         }
 
-        public ref T this[Entity entity] => ref _data[_sparse[EntityUtil.DecomposeIndex(entity)]];
-        public Entity this[int index] => _dense[index];
+        public ref T this[Entity entity] => ref _data[_mapping[EntityUtil.DecomposeIndex(entity)]];
+        public Entity this[int index] => _entities[index];
 
         public void Clear() {
             _data.Clear();
-            _dense.Clear();
+            _entities.Clear();
         }
     }
 }
