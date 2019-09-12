@@ -18,7 +18,7 @@ namespace Simplecs {
     /// Iterates over all entities with a particular component type.
     /// </summary>
     /// <typeparam name="T">Type of required component.</typeparam>
-    public sealed class View<T> : IEnumerable<ViewTuple<T>> where T : struct {
+    public sealed class View<T> : IEnumerableView<ViewTuple<T>> where T : struct {
         private ComponentTable<T> _table;
         private ViewPredicate _predicate;
 
@@ -34,10 +34,19 @@ namespace Simplecs {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewIterator<T> GetEnumerator() => new ViewIterator<T>(_table, _predicate);
+        public ViewEnumerator<View<T>, ViewTuple<T>> GetEnumerator() => new ViewEnumerator<View<T>, ViewTuple<T>>(this);
 
         IEnumerator<ViewTuple<T>> IEnumerable<ViewTuple<T>>.GetEnumerator() => this.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+        int IEnumerableView<ViewTuple<T>>.MaximumIndex => _table.Count;
+        bool IEnumerableView<ViewTuple<T>>.TryGetAt(int index, ref ViewTuple<T> tuple) {
+            if (_predicate.IsAllowed(_table[index])) {
+                tuple = new ViewTuple<T>(_table[index], _table);
+                return true;
+            }
+            return false;
+        }
     }
 
     /// <summary>
@@ -45,7 +54,7 @@ namespace Simplecs {
     /// </summary>
     /// <typeparam name="T1">Type of required component.</typeparam>
     /// <typeparam name="T2">Type of required component.</typeparam>
-    public sealed class View<T1, T2> : IEnumerable<ViewTuple<T1, T2>> where T1 : struct where T2 : struct {
+    public sealed class View<T1, T2> : IEnumerableView<ViewTuple<T1, T2>> where T1 : struct where T2 : struct {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
         private ViewPredicate _predicate;
@@ -63,10 +72,19 @@ namespace Simplecs {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewIterator<T1, T2> GetEnumerator() => new ViewIterator<T1, T2>(_table1, _table2, _predicate);
+        public ViewEnumerator<View<T1, T2>, ViewTuple<T1, T2>> GetEnumerator() => new ViewEnumerator<View<T1, T2>, ViewTuple<T1, T2>>(this);
 
         IEnumerator<ViewTuple<T1, T2>> IEnumerable<ViewTuple<T1, T2>>.GetEnumerator() => this.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+        int IEnumerableView<ViewTuple<T1, T2>>.MaximumIndex => _table1.Count;
+        bool IEnumerableView<ViewTuple<T1, T2>>.TryGetAt(int index, ref ViewTuple<T1, T2> tuple) {
+            if (_predicate.IsAllowed(_table1[index]) && _table2.Contains(_table1[index])) {
+                tuple = new ViewTuple<T1, T2>(_table1[index], _table1, _table2);
+                return true;
+            }
+            return false;
+        }
     }
 
     /// <summary>
@@ -75,7 +93,7 @@ namespace Simplecs {
     /// <typeparam name="T1">Type of required component.</typeparam>
     /// <typeparam name="T2">Type of required component.</typeparam>
     /// <typeparam name="T3">Type of required component.</typeparam>
-    public sealed class View<T1, T2, T3> : IEnumerable<ViewTuple<T1, T2, T3>> where T1 : struct where T2 : struct where T3 : struct {
+    public sealed class View<T1, T2, T3> : IEnumerableView<ViewTuple<T1, T2, T3>> where T1 : struct where T2 : struct where T3 : struct {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
         private ComponentTable<T3> _table3;
@@ -95,9 +113,18 @@ namespace Simplecs {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewIterator<T1, T2, T3> GetEnumerator() => new ViewIterator<T1, T2, T3>(_table1, _table2, _table3, _predicate);
+        public ViewEnumerator<View<T1, T2, T3>, ViewTuple<T1, T2, T3>> GetEnumerator() => new ViewEnumerator<View<T1, T2, T3>, ViewTuple<T1, T2, T3>>(this);
 
         IEnumerator<ViewTuple<T1, T2, T3>> IEnumerable<ViewTuple<T1, T2, T3>>.GetEnumerator() => this.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+        int IEnumerableView<ViewTuple<T1, T2, T3>>.MaximumIndex => _table1.Count;
+        bool IEnumerableView<ViewTuple<T1, T2, T3>>.TryGetAt(int index, ref ViewTuple<T1, T2, T3> tuple) {
+            if (_predicate.IsAllowed(_table1[index]) && _table2.Contains(_table1[index]) && _table3.Contains(_table1[index])) {
+                tuple = new ViewTuple<T1, T2, T3>(_table1[index], _table1, _table2, _table3);
+                return true;
+            }
+            return false;
+        }
     }
 }
