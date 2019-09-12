@@ -12,7 +12,9 @@ namespace SimplecsTests {
             world.CreateEntity().Attach(new IntComponent { x = 3 });
 
             var view = world.CreateView().Select<IntComponent>();
-            view.Each((Entity _, ref IntComponent comp) => comp.x *= comp.x);
+            foreach (var row in view) {
+                row.Component.x *= row.Component.x;
+            }
 
             Assert.AreEqual(expected: 1, actual: view.ElementAt(0).Component.x);
             Assert.AreEqual(expected: 4, actual: view.ElementAt(1).Component.x);
@@ -69,7 +71,9 @@ namespace SimplecsTests {
 
             Assert.AreEqual(expected: new NameComponent { name = "Bob" }, actual: nameView.FirstOrDefault().Component);
             Assert.AreEqual(expected: new IntComponent { x = 7 }, actual: intView.FirstOrDefault().Component);
-            Assert.AreEqual(expected: (entity, new NameComponent { name = "Bob" }, new IntComponent { x = 7 }), actual: bothView.FirstOrDefault());
+            
+            Assert.AreEqual(expected: new NameComponent { name = "Bob" }, actual: bothView.FirstOrDefault().Component1);
+            Assert.AreEqual(expected: new IntComponent { x = 7 }, actual: bothView.FirstOrDefault().Component2);
         }
     }
 }
