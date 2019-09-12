@@ -18,23 +18,21 @@ namespace Simplecs {
     /// Allocates and maintains a unique set of entity keys.
     /// </summary>
     internal class EntityAllocator {
-        private int _nextIndex = 0;
-        private List<int> _freeList = new List<int>();
         private List<byte> _generations = new List<byte>();
+        private List<int> _freeIndices = new List<int>();
         private int _freeHead = 0;
         private int _freeCount = 0;
+        private int _nextUnusedIndex = 0;
         private uint _freeMinimum = 1000;
 
         public const uint invalid = 0;
 
         public EntityAllocator() { }
 
-        public EntityAllocator(uint freeMinimum) {
-            _freeMinimum = freeMinimum;
-        }
+        public EntityAllocator(uint freeMinimum) => _freeMinimum = freeMinimum;
 
         public Entity Allocate() {
-            int index = AllocateIndex();
+            int index = AcquireIndex();
 
             // Determine the generation of the key at the given index;
             // for new indices, create a new generation.
@@ -42,36 +40,62 @@ namespace Simplecs {
             if (index >= _generations.Count) {
                 _generations.AddRange(Enumerable.Repeat((byte)1, index - _generations.Count + 1));
             }
-            byte generation = _generations[index];
 
-            return EntityUtil.MakeKey(index, generation);
+            return EntityUtil.MakeKey(index, _generations[index]);
         }
 
         public bool Deallocate(Entity entity) {
             (int index, byte generation) = EntityUtil.DecomposeKey(entity);
-            if (index >= 0 && index < _generations.Count && _generations[index] == generation) {
-                if (++_generations[index] == 0) {
-                    // Ensure generation can never be 0, so we can find
-                    // invalid keys easily.
-                    //
-                    _generations[index] = 1;
-                }
-                AddToFreeList(index);
-                return true;
+
+            if (index < 0 && index >= _generations.Count || _generations[index] != generation) {
+                return false;
             }
-            return false;
+
+            // Bump generation so the Entity key remains stale for a long time even
+            // when the index portion is recycled.
+            //
+            if (++_generations[index] == 0) {
+                // Ensure generation can never be 0, so we can find
+                // invalid keys easily.
+                //
+                _generations[index] = 1;
+            }
+
+            ReleaseIndex(index);
+            
+            return true;
         }
 
-        public bool Validate(Entity entity) {
+        public bool IsValid(Entity entity) {
             (int index, byte generation) = EntityUtil.DecomposeKey(entity);
-            return index >= 0 && index < _generations.Count &&  _generations[index] == generation;
+            return index >= 0 && index < _generations.Count && _generations[index] == generation;
         }
 
-        private void AddToFreeList(int index) {
+        private int AcquireIndex() {
+            // Only consume from the freelist if we have some items in it,
+            // to avoid recycling the same id too often.
+            //
+            if (_freeCount <= _freeMinimum) {
+                return _nextUnusedIndex++;
+            }
+
+            int index = _freeIndices[_freeHead];
+
+            // Update the circular buffer after consuming the head item.
+            //
+            --_freeCount;
+            if (++_freeHead >= _freeIndices.Count) {
+                _freeHead = 0;
+            }
+
+            return index;
+        }
+        
+        private void ReleaseIndex(int index) {
             // If the freelist is full, grow.
             //
-            if (_freeCount == _freeList.Count) {
-                _freeList.Add(index);
+            if (_freeCount == _freeIndices.Count) {
+                _freeIndices.Add(index);
                 ++_freeCount;
                 return;
             }
@@ -79,32 +103,12 @@ namespace Simplecs {
             // Insert into the circular buffer.
             //
             int freeIndex = _freeHead + _freeCount;
-            if (freeIndex > _freeList.Count) {
-                freeIndex -= _freeList.Count;
+            if (freeIndex > _freeIndices.Count) {
+                freeIndex -= _freeIndices.Count;
             }
 
-            _freeList[freeIndex] = index;
+            _freeIndices[freeIndex] = index;
             ++_freeCount;
-        }
-
-        private int AllocateIndex() {
-            // Only consume from the freelist if we have some items in it,
-            // to avoid recycling the same id too often.
-            //
-            if (_freeCount <= _freeMinimum) {
-                return _nextIndex++;
-            }
-
-            int index = _freeList[_freeHead];
-
-            // Update the circular buffer after consuming the head item.
-            //
-            --_freeCount;
-            if (++_freeHead >= _freeList.Count) {
-                _freeHead = 0;
-            }
-
-            return index;
         }
     }
 }

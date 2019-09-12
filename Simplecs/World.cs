@@ -57,7 +57,7 @@ namespace Simplecs {
         /// </summary>
         /// <param name="entity">Entity to test.</param>
         /// <returns>True if the entity exists.</returns>
-        public bool Exists(Entity entity) => _entityAllocator.Validate(entity);
+        public bool Exists(Entity entity) => _entityAllocator.IsValid(entity);
 
         /// <summary>
         /// Attaches a component to an existing entity.
@@ -65,7 +65,7 @@ namespace Simplecs {
         /// <param name="entity">Entity the component will be attached to.</param>
         /// <param name="component">Component to attach.</param>
         public void Attach<T>(Entity entity, in T component) where T : struct {
-            if (!_entityAllocator.Validate(entity)) {
+            if (!_entityAllocator.IsValid(entity)) {
                 throw new InvalidOperationException(message: "Invalid entity key");
             }
 
@@ -79,7 +79,7 @@ namespace Simplecs {
         /// <param name="entity">Entity the component will be attached to.</param>
         /// <param name="component">Component to attach.</param>
         public void Attach(Entity entity, object component) {
-            if (!_entityAllocator.Validate(entity)) {
+            if (!_entityAllocator.IsValid(entity)) {
                 throw new InvalidOperationException(message: "Invalid entity key");
             }
 
@@ -109,7 +109,7 @@ namespace Simplecs {
         /// <param name="entity">Entity whose components should be enumerated.</param>
         /// <returns>Iterator of boxed copies of the component on the entity.</returns>
         public IEnumerable<object> ComponentsOn(Entity entity) {
-            if (!_entityAllocator.Validate(entity)) {
+            if (!_entityAllocator.IsValid(entity)) {
                 throw new InvalidOperationException(message: "Invalid entity key");
             }
 
