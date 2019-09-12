@@ -14,48 +14,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Simplecs {
-    public struct ViewTuple<T> where T : struct {
-        private ComponentTable<T> _table;
-        public Entity Entity { get; }
-        public ref T Component => ref _table[Entity];
-
-        internal ViewTuple(Entity entity, ComponentTable<T> table) {
-            Entity = entity;
-            _table = table;
-        }
-    }
-
-    class ViewIterator<T> : IEnumerator<ViewTuple<T>> where T : struct {
-        private ComponentTable<T> _table;
-        private ViewPredicate _predicate;
-        private int _index = -1;
-
-        public ViewTuple<T> Current => new ViewTuple<T>(_table[_index], _table);
-        object? IEnumerator.Current => this.Current;
-
-        public ViewIterator(ComponentTable<T> table, ViewPredicate predicate) {
-            _table = table;
-            _predicate = predicate;
-        }
-
-        public void Dispose() {}
-
-        public bool MoveNext() {
-            if (_index == _table.Count) {
-                return false;
-            }
-
-            ++_index;
-            while (_index < _table.Count && !_predicate.IsAllowed(_table[_index])) {
-                ++_index;
-            }
-
-            return _index != _table.Count;
-        }
-
-        public void Reset() => _index = -1;
-    }
-
     /// <summary>
     /// Iterates over all entities with a particular component type.
     /// </summary>
