@@ -17,31 +17,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Simplecs {
-    /// <summary>
-    /// Safe readonly view of a component table that will never cause an allocation.
-    /// </summary>
     internal interface IComponentTable {
-        /// <value>Type of the component data stored in this table.</value>
         Type Type { get; }
-
-        /// <value>Number of components stored in table.</value>
         int Count { get; }
 
-        /// <param name="entity">Entity key.</param>
-        /// <returns>True if a component is stored for this key.</returns>
         bool Contains(Entity entity);
-
-        /// <param name="entity">Entity key.</param>
-        /// <returns>True if a component was stored for this key and is now removed.</returns>
         bool Remove(Entity entity);
-
         void Add(Entity entity, object component);
-
         bool TryGet(Entity entity, out object data);
-
-        /// <summary>
-        /// Removes all components.
-        /// </summary>
         void Clear();
     }
 
