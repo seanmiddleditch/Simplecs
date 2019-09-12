@@ -11,9 +11,7 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Simplecs {
@@ -32,13 +30,10 @@ namespace Simplecs {
     /// Stores a table of components mapped by unique entity keys.
     /// </summary>
     /// <typeparam name="T">Struct type containing component data.</typeparam>
-    internal class ComponentTable<T> : IComponentTable, IEnumerable<(Entity, T)> where T : struct {
+    internal class ComponentTable<T> : IComponentTable where T : struct {
         private ChunkedStorage<T> _data = new ChunkedStorage<T>();
         private List<Entity> _dense = new List<Entity>();
         private List<int> _sparse = new List<int>();
-#if DEBUG
-        private int _version = 0;
-#endif
 
         public delegate void Callback(Entity entity, ref T component);
 
@@ -73,9 +68,6 @@ namespace Simplecs {
 
             _dense.RemoveAt(_dense.Count - 1);
             _data.RemoveAt(_data.Count - 1);
-#if DEBUG
-            ++_version;
-#endif
             return true;
         }
 
@@ -99,9 +91,6 @@ namespace Simplecs {
 
             _dense.Add(entity);
             _data.Add(data);
-#if DEBUG
-            ++_version;
-#endif
         }
 
         void IComponentTable.Add(Entity entity, object component) {
@@ -143,59 +132,12 @@ namespace Simplecs {
             return true;
         }
 
-        /// <summary>
-        /// Enumerates all entity keys and associated component data stored in the table.
-        /// </summary>
-        /// <returns>Enumerator of (key, component) tuples.</returns>
-        public IEnumerator<(Entity, T)> GetEnumerator() {
-#if DEBUG
-            int version = _version;
-#endif
-
-            for (int index = 0; index != _data.Count; ++index) {
-#if DEBUG
-                if (version != _version) {
-                    throw new InvalidOperationException(message:"Enumerating a modified collection.");
-                }
-#endif
-
-                yield return (_dense[index], _data[index]);
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return this.GetEnumerator();
-        }
-
         public ref T this[Entity entity] => ref _data[_sparse[EntityUtil.DecomposeIndex(entity)]];
         public Entity this[int index] => _dense[index];
-
-        /// <summary>
-        /// Iterates all stored components.
-        /// </summary>
-        /// <param name="callback">Invoked for each entity/component pair in table.</param>
-        public void Each(Callback callback) {
-#if DEBUG
-            int version = _version;
-#endif
-
-            for (int index = 0; index != _data.Count; ++index) {
-#if DEBUG
-                if (version != _version) {
-                    throw new InvalidOperationException(message:"Enumerating a modified collection.");
-                }
-#endif
-
-                callback(_dense[index], ref _data[index]);
-            }
-        }
 
         public void Clear() {
             _data.Clear();
             _dense.Clear();
-#if DEBUG
-            ++_version;
-#endif
         }
     }
 }
