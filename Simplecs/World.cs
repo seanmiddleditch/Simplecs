@@ -99,6 +99,46 @@ namespace Simplecs {
         }
 
         /// <summary>
+        /// Checks if the specified entity has the specified component type attached.
+        /// </summary>
+        public bool HasComponent<T>(Entity entity) where T : struct {
+            return HasComponent(entity, typeof(T));
+        }
+
+        /// <summary>
+        /// Checks if the specified entity has the specified component type attached.
+        /// </summary>
+        public bool HasComponent(Entity entity, Type component) {
+            return _components.TryGetValue(component, out IComponentTable? table) && table != null && table.Contains(entity);
+        }
+
+        /// <summary>
+        /// Retrives the component on the specified entity.null
+        /// 
+        /// Illegal to call if the component does not exist.
+        /// </summary>
+        public ref T GetComponent<T>(Entity entity) where T : struct {
+            if (!_components.TryGetValue(typeof(T), out IComponentTable? generic) || !(generic is ComponentTable<T> typed) || !typed.Contains(entity)) {
+                throw new InvalidOperationException(message:"Entity does not have requested component");
+            }
+
+            return ref typed[entity];
+        }
+
+        /// <summary>
+        /// Retrives the component on the specified entity.null
+        /// 
+        /// Illegal to call if the component does not exist.
+        /// </summary>
+        public object GetComponent(Entity entity, Type component) {
+            if (!_components.TryGetValue(component, out IComponentTable? table) || table == null || !table.TryGet(entity, out object data)) {
+                throw new InvalidOperationException(message:"Entity does not have requested component");
+            }
+
+            return data;
+        }
+
+        /// <summary>
         /// Enumerates all the components attached to a given entity.
         /// 
         /// Note that these are returned as objects, so boxing for each component will
