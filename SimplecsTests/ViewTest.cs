@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Simplecs;
+using System;
 using System.Linq;
 
 namespace SimplecsTests {
@@ -74,6 +75,22 @@ namespace SimplecsTests {
             
             Assert.AreEqual(expected: new NameComponent { name = "Bob" }, actual: bothView.FirstOrDefault().Component1);
             Assert.AreEqual(expected: new IntComponent { x = 7 }, actual: bothView.FirstOrDefault().Component2);
+        }
+
+        [Test]
+        public void Invalidate() {
+            var world = new World();
+            world.CreateEntity().Attach(new IntComponent { x = 7 });
+            var entity = world.CreateEntity().Attach(new IntComponent { x = 9 }).Entity;
+            world.CreateEntity().Attach(new IntComponent { x = 11 });
+
+            var view = world.CreateView().Select<IntComponent>();
+
+            Assert.Throws<InvalidOperationException>(() => {
+                foreach (var row in view) {
+                    world.Destroy(entity);
+                }
+            });
         }
     }
 }

@@ -40,6 +40,7 @@ namespace Simplecs {
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         int IEnumerableView<ViewTuple<T>>.MaximumIndex => _table.Count;
+        int IEnumerableView<ViewTuple<T>>.Version => _table.Version;
         bool IEnumerableView<ViewTuple<T>>.TryGetAt(int index, ref ViewTuple<T> tuple) {
             if (_predicate.IsAllowed(_table[index])) {
                 tuple = new ViewTuple<T>(_table[index], _table);
@@ -78,6 +79,7 @@ namespace Simplecs {
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         int IEnumerableView<ViewTuple<T1, T2>>.MaximumIndex => _table1.Count;
+        int IEnumerableView<ViewTuple<T1, T2>>.Version => _table1.Version ^ _table2.Version;
         bool IEnumerableView<ViewTuple<T1, T2>>.TryGetAt(int index, ref ViewTuple<T1, T2> tuple) {
             if (_predicate.IsAllowed(_table1[index]) && _table2.Contains(_table1[index])) {
                 tuple = new ViewTuple<T1, T2>(_table1[index], _table1, _table2);
@@ -119,6 +121,7 @@ namespace Simplecs {
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         int IEnumerableView<ViewTuple<T1, T2, T3>>.MaximumIndex => _table1.Count;
+        int IEnumerableView<ViewTuple<T1, T2, T3>>.Version => _table1.Version ^ _table2.Version ^ _table3.Version;
         bool IEnumerableView<ViewTuple<T1, T2, T3>>.TryGetAt(int index, ref ViewTuple<T1, T2, T3> tuple) {
             if (_predicate.IsAllowed(_table1[index]) && _table2.Contains(_table1[index]) && _table3.Contains(_table1[index])) {
                 tuple = new ViewTuple<T1, T2, T3>(_table1[index], _table1, _table2, _table3);

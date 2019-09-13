@@ -39,7 +39,7 @@ namespace Simplecs {
         /// <param name="entity">Entity to destroy</param>
         /// <returns>True if the given entity was found and destroyed.</returns>
         public bool Destroy(Entity entity) {
-            if (!_entityAllocator.Deallocate(entity)) {
+            if (!_entityAllocator.IsValid(entity)) {
                 return false;
             }
 
@@ -47,7 +47,7 @@ namespace Simplecs {
                 table.Remove(entity);
             }
 
-            return true;
+            return _entityAllocator.Deallocate(entity);
         }
 
         /// <summary>

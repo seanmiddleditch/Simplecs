@@ -45,11 +45,11 @@ namespace Simplecs {
         }
 
         public bool Deallocate(Entity entity) {
-            (int index, byte generation) = EntityUtil.DecomposeKey(entity);
-
-            if (index < 0 && index >= _generations.Count || _generations[index] != generation) {
+            if (!IsValid(entity)) {
                 return false;
             }
+
+            (int index, byte generation) = EntityUtil.DecomposeKey(entity);
 
             // Bump generation so the Entity key remains stale for a long time even
             // when the index portion is recycled.
