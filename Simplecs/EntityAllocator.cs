@@ -19,17 +19,11 @@ namespace Simplecs {
     /// </summary>
     internal class EntityAllocator {
         private List<byte> _generations = new List<byte>();
-        private List<int> _freeIndices = new List<int>();
-        private int _freeHead = 0;
-        private int _freeCount = 0;
+        private CircularBuffer<int> _freeIndices = new CircularBuffer<int>();
         private int _nextUnusedIndex = 0;
-        private uint _freeMinimum = 1000;
 
-        public const uint invalid = 0;
-
-        public EntityAllocator() { }
-
-        public EntityAllocator(uint freeMinimum) => _freeMinimum = freeMinimum;
+        public const int FreeMinimum = 1000;
+        public const uint Invalid = 0;
 
         public Entity Allocate() {
             int index = AcquireIndex();
@@ -61,8 +55,10 @@ namespace Simplecs {
                 _generations[index] = 1;
             }
 
-            ReleaseIndex(index);
-            
+            // Recycle index.
+            //
+            _freeIndices.Add(index);
+
             return true;
         }
 
@@ -71,44 +67,9 @@ namespace Simplecs {
             return index >= 0 && index < _generations.Count && _generations[index] == generation;
         }
 
-        private int AcquireIndex() {
-            // Only consume from the freelist if we have some items in it,
-            // to avoid recycling the same id too often.
-            //
-            if (_freeCount <= _freeMinimum) {
-                return _nextUnusedIndex++;
-            }
-
-            int index = _freeIndices[_freeHead];
-
-            // Update the circular buffer after consuming the head item.
-            //
-            --_freeCount;
-            if (++_freeHead >= _freeIndices.Count) {
-                _freeHead = 0;
-            }
-
-            return index;
-        }
-        
-        private void ReleaseIndex(int index) {
-            // If the freelist is full, grow.
-            //
-            if (_freeCount == _freeIndices.Count) {
-                _freeIndices.Add(index);
-                ++_freeCount;
-                return;
-            }
-
-            // Insert into the circular buffer.
-            //
-            int freeIndex = _freeHead + _freeCount;
-            if (freeIndex > _freeIndices.Count) {
-                freeIndex -= _freeIndices.Count;
-            }
-
-            _freeIndices[freeIndex] = index;
-            ++_freeCount;
-        }
+        // Only consume from the freelist if we have some items in it,
+        // to avoid recycling the same id too often.
+        //
+        private int AcquireIndex() => _freeIndices.Count < FreeMinimum ? _nextUnusedIndex++ : _freeIndices.PopFront();
     }
 }
