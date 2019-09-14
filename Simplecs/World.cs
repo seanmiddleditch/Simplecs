@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using Simplecs.Views;
 
 namespace Simplecs {
     /// <summary>

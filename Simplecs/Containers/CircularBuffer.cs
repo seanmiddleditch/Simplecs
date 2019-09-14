@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Simplecs {
+namespace Simplecs.Containers {
     /// <summary>
     /// Simple circule buffer implementation.
     /// </summary>

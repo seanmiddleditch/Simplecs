@@ -13,7 +13,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace Simplecs {
+namespace Simplecs.Containers {
     /// <summary>
     /// Stores a collection of values in semi-contiguous but stable memory.
     /// 

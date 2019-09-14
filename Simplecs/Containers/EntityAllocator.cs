@@ -12,8 +12,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Simplecs.Containers;
 
-namespace Simplecs {
+namespace Simplecs.Containers {
     /// <summary>
     /// Allocates and maintains a unique set of entity keys.
     /// </summary>

@@ -14,7 +14,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Simplecs {
+namespace Simplecs.Views {
     /// <summary>
     /// A collection of entities that match a particular signature.
     /// </summary>

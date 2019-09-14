@@ -12,7 +12,7 @@
 
 using System.Collections.Generic;
 
-namespace Simplecs {
+namespace Simplecs.Views {
     /// <summary>
     /// Factory for bindings.
     /// </summary>

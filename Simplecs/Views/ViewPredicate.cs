@@ -10,9 +10,9 @@
 // with this software. If not, see
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Collections.Generic;
+using Simplecs.Containers;
 
-namespace Simplecs {
+namespace Simplecs.Views {
     internal struct ViewPredicate {
         private IComponentTable[]? _tables;
         private int _excludedCount;

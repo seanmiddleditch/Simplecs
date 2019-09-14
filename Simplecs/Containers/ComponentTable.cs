@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Simplecs {
+namespace Simplecs.Containers {
     internal interface IComponentTable {
         Type Type { get; }
         int Count { get; }
