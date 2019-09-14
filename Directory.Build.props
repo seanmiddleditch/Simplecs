@@ -1,0 +1,8 @@
+<Project>
+  <!-- Output directories -->
+  <PropertyGroup>
+    <BaseOutputPath>$(SolutionDir)\bin\$(MSBuildProjectName)</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(SolutionDir)\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+    <PackageOutputPath>$(SolutionDir)\pkg\$(MSBuildProjectName)</PackageOutputPath>
+  </PropertyGroup>
+</Project>

@@ -1,16 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Core configuration -->
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- C# 8 nullability checks -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <NullableContextOptions>enable</NullableContextOptions>
+    <NullableReferenceTypes>true</NullableReferenceTypes>
+  </PropertyGroup>
+
+  <!-- Packaging configuration -->
   <PropertyGroup>
     <PackageId>Simplecs</PackageId>
     <Version>0.0.1</Version>
     <Authors>Sean Middleditch</Authors>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-    <LangVersion>8.0</LangVersion>
-    <Nullable>enable</Nullable>
-    <NullableContextOptions>enable</NullableContextOptions>
-    <NullableReferenceTypes>true</NullableReferenceTypes>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/seanmiddleditch/Simplecs</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

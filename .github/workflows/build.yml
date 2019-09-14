@@ -32,7 +32,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: Simplecs.0.0.1.symbols.nupkg
-          path: Simplecs/bin/Release
+          path: pkg/Simplecs
         name: Publish Symbols
         if: matrix.config == 'Release'
 
