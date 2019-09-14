@@ -17,15 +17,15 @@ namespace Simplecs {
     /// <summary>
     /// Contains a collection of entities and associated components.
     /// </summary>
-    public class World {
-        private EntityAllocator _entityAllocator = new EntityAllocator();
-        private Dictionary<Type, IComponentTable> _components = new Dictionary<Type, IComponentTable>();
+    public sealed class World {
+        private EntityAllocator _entities = new EntityAllocator();
+        private Dictionary<Type, IComponentTable> _tables = new Dictionary<Type, IComponentTable>();
 
         /// <summary>
         /// Creates a new entity.
         /// </summary>
         /// <returns>A builder object that can be used to attach components or extract the id.</returns>
-        public EntityBuilder CreateEntity() => new EntityBuilder(world: this, entity: _entityAllocator.Allocate());
+        public EntityBuilder CreateEntity() => new EntityBuilder(world: this, entity: _entities.Allocate());
 
         /// <summary>
         /// Creates a new view builder.
@@ -39,15 +39,15 @@ namespace Simplecs {
         /// <param name="entity">Entity to destroy</param>
         /// <returns>True if the given entity was found and destroyed.</returns>
         public bool Destroy(Entity entity) {
-            if (!_entityAllocator.IsValid(entity)) {
+            if (!_entities.IsValid(entity)) {
                 return false;
             }
 
-            foreach (var table in _components.Values) {
+            foreach (var table in _tables.Values) {
                 table.Remove(entity);
             }
 
-            return _entityAllocator.Deallocate(entity);
+            return _entities.Deallocate(entity);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Simplecs {
         /// </summary>
         /// <param name="entity">Entity to test.</param>
         /// <returns>True if the entity exists.</returns>
-        public bool Exists(Entity entity) => _entityAllocator.IsValid(entity);
+        public bool Exists(Entity entity) => _entities.IsValid(entity);
 
         /// <summary>
         /// Attaches a component to an existing entity.
@@ -65,7 +65,7 @@ namespace Simplecs {
         /// <param name="entity">Entity the component will be attached to.</param>
         /// <param name="component">Component to attach.</param>
         public void Attach<T>(Entity entity, in T component) where T : struct {
-            if (!_entityAllocator.IsValid(entity)) {
+            if (!_entities.IsValid(entity)) {
                 throw new InvalidOperationException(message: "Invalid entity key");
             }
 
@@ -79,7 +79,7 @@ namespace Simplecs {
         /// <param name="entity">Entity the component will be attached to.</param>
         /// <param name="component">Component to attach.</param>
         public void Attach(Entity entity, object component) {
-            if (!_entityAllocator.IsValid(entity)) {
+            if (!_entities.IsValid(entity)) {
                 throw new InvalidOperationException(message: "Invalid entity key");
             }
 
@@ -93,9 +93,19 @@ namespace Simplecs {
         /// <param name="entity">Entity whose component should be destroyed.</param>
         /// <returns>True if the given component was found and destroyed.</returns>
         public bool Detach<T>(Entity entity) where T : struct {
-            _components.TryGetValue(typeof(T), out IComponentTable? table);
+            _tables.TryGetValue(typeof(T), out IComponentTable? table);
             var components = table as ComponentTable<T>;
             return components != null && components.Remove(entity);
+        }
+
+        /// <summary>
+        /// Removes a component from an existing entity.
+        /// </summary>
+        /// <param name="entity">Entity whose component should be destroyed.</param>
+        /// /// <param name="componentType">Type of component that should be destroyed.</param>
+        /// <returns>True if the given component was found and destroyed.</returns>
+        public bool Detach(Entity entity, Type componentType) {
+            return _tables.TryGetValue(componentType, out IComponentTable? table) && table != null && table.Remove(entity);
         }
 
         /// <summary>
@@ -109,7 +119,7 @@ namespace Simplecs {
         /// Checks if the specified entity has the specified component type attached.
         /// </summary>
         public bool HasComponent(Entity entity, Type component) {
-            return _components.TryGetValue(component, out IComponentTable? table) && table != null && table.Contains(entity);
+            return _tables.TryGetValue(component, out IComponentTable? table) && table != null && table.Contains(entity);
         }
 
         /// <summary>
@@ -118,8 +128,8 @@ namespace Simplecs {
         /// Illegal to call if the component does not exist.
         /// </summary>
         public ref T GetComponent<T>(Entity entity) where T : struct {
-            if (!_components.TryGetValue(typeof(T), out IComponentTable? generic) || !(generic is ComponentTable<T> typed) || !typed.Contains(entity)) {
-                throw new InvalidOperationException(message:"Entity does not have requested component");
+            if (!_tables.TryGetValue(typeof(T), out IComponentTable? generic) || !(generic is ComponentTable<T> typed) || !typed.Contains(entity)) {
+                throw new InvalidOperationException(message: "Entity does not have requested component");
             }
 
             return ref typed[entity];
@@ -131,8 +141,8 @@ namespace Simplecs {
         /// Illegal to call if the component does not exist.
         /// </summary>
         public object GetComponent(Entity entity, Type component) {
-            if (!_components.TryGetValue(component, out IComponentTable? table) || table == null || !table.TryGet(entity, out object data)) {
-                throw new InvalidOperationException(message:"Entity does not have requested component");
+            if (!_tables.TryGetValue(component, out IComponentTable? table) || table == null || !table.TryGet(entity, out object data)) {
+                throw new InvalidOperationException(message: "Entity does not have requested component");
             }
 
             return data;
@@ -148,35 +158,35 @@ namespace Simplecs {
         /// </summary>
         /// <param name="entity">Entity whose components should be enumerated.</param>
         /// <returns>Iterator of boxed copies of the component on the entity.</returns>
-        public IEnumerable<object> ComponentsOn(Entity entity) {
-            if (!_entityAllocator.IsValid(entity)) {
+        public IEnumerable<Type> ComponentsOn(Entity entity) {
+            if (!_entities.IsValid(entity)) {
                 throw new InvalidOperationException(message: "Invalid entity key");
             }
 
-            foreach ((var _, IComponentTable table) in _components) {
-                if (table.TryGet(entity, out object data)) {
-                    yield return data;
+            foreach ((var componentType, IComponentTable table) in _tables) {
+                if (table.Contains(entity)) {
+                    yield return componentType;
                 }
             }
         }
 
         internal ComponentTable<T> GetTable<T>() where T : struct {
-            if (_components.TryGetValue(typeof(T), out IComponentTable? generic) && generic is ComponentTable<T> typed) {
+            if (_tables.TryGetValue(typeof(T), out IComponentTable? generic) && generic is ComponentTable<T> typed) {
                 return typed;
             }
 
             var table = new ComponentTable<T>();
-            _components.Add(table.Type, table);
+            _tables.Add(table.Type, table);
             return table;
         }
 
         internal IComponentTable GetTable(Type type) {
-            if (_components.TryGetValue(type, out IComponentTable? generic) && generic != null) {
+            if (_tables.TryGetValue(type, out IComponentTable? generic) && generic != null) {
                 return generic;
             }
 
             var table = CreateTable(type);
-            _components.Add(table.Type, table);
+            _tables.Add(table.Type, table);
             return table;
         }
 

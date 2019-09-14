@@ -13,30 +13,37 @@
 using System.Collections.Generic;
 
 namespace Simplecs {
-    internal class ViewPredicate {
-        private List<IComponentTable> _required = new List<IComponentTable>();
-        private List<IComponentTable> _excluded = new List<IComponentTable>();
+    internal struct ViewPredicate {
+        private IComponentTable[]? _tables;
+        private int _excludedCount;
 
-        internal void Require(IComponentTable table) => _required.Add(table);
-        internal void Exclude(IComponentTable table) => _excluded.Add(table);
+        internal ViewPredicate(IComponentTable[]? tables, int excludedCount) => (_tables, _excludedCount) = (tables, excludedCount);
 
-        internal bool IsAllowed(Entity entity) => !IsExcluded(entity) && HasRequired(entity);
-
-        private bool IsExcluded(Entity entity) {
-            foreach (IComponentTable table in _excluded) {
-                if (table.Contains(entity)) {
-                    return true;
-                }
+        internal bool IsAllowed(Entity entity) {
+            // If we have no tables at all, there's nothing to check.
+            //
+            if (_tables == null) {
+                return true;
             }
-            return false;
-        }
 
-        private bool HasRequired(Entity entity) {
-            foreach (IComponentTable table in _required) {
-                if (!table.Contains(entity)) {
+            // If the entity exists in any excluded table, the entity is not allowed.
+            //
+            for (int index = 0; index != _excludedCount; ++index) {
+                if (_tables[index].Contains(entity)) {
                     return false;
                 }
             }
+
+            // If the entity is missing from any required table, the entity is not allowed.
+            //
+            for (int index = _excludedCount; index != _tables.Length; ++index) {
+                if (!_tables[index].Contains(entity)) {
+                    return false;
+                }
+            }
+
+            // The entity was not rejected by any test so it must be allowed.
+            //
             return true;
         }
     }

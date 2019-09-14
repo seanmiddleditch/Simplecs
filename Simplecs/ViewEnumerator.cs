@@ -16,45 +16,26 @@ using System.Collections.Generic;
 
 namespace Simplecs {
     /// <summary>
-    /// Minimum interface necessary for an enumerable view.
-    /// 
-    /// This is effectively an internal interface.
-    /// </summary>
-    /// <typeparam name="Tuple">Tuple type being enumerated.</typeparam>
-    public interface IEnumerableView<Tuple> : IEnumerable<Tuple> where Tuple : struct {
-        /// <value>Maximum (exclusive) index that is valid for the view.</value>
-        int MaximumIndex { get; }
-
-        /// <value>Tag used to detect when an iteration-unfriendly change has occured.</value>
-        int Version { get; }
-
-        /// <param name="index">Index to query.</param>
-        /// <param name="tuple">Tuple which will contain the updated values.</param>
-        /// <returns>True if the index references a matching entity.</returns>
-        bool TryGetAt(int index, ref Tuple tuple);
-    }
-
-    /// <summary>
     /// Enumerator for a View.
     /// </summary>
-    /// <typeparam name="View">View being enumerated.</typeparam>
-    /// <typeparam name="Tuple">Tuple type of iteration.</typeparam>
-    public sealed class ViewEnumerator<View, Tuple> : IEnumerator<Tuple> where View : IEnumerableView<Tuple> where Tuple : struct {
-        private Tuple _tuple;
-        private int _index = -1;
-        private int _version;
-        private View _view;
+    /// <note>
+    /// The Enumerator is invalidated if the underlying component tables are modified.
+    /// 
+    /// We currently do not protected against nor detect this situation.
+    /// </note>
+    /// <typeparam name="Binder">View being enumerated.</typeparam>
+    /// <typeparam name="Binding">Type of iteration.</typeparam>
+    public struct ViewEnumerator<Binder, Binding> : IEnumerator<Binding> where Binder : IBinder<Binding> where Binding : struct {
+        private Binder _binder;
+        private int _index;
 
         /// <returns>Current value of iterator.</returns>
-        public ref Tuple Current => ref _tuple;
+        public Binding Current => _binder.Bind(_binder.PotentialEntities[_index]);
 
-        Tuple IEnumerator<Tuple>.Current => _tuple;
-        object? IEnumerator.Current => _tuple;
+        Binding IEnumerator<Binding>.Current => Current;
+        object? IEnumerator.Current => throw new NotImplementedException();
 
-        internal ViewEnumerator(View view) {
-            _view = view;
-            _version = view.Version;
-        }
+        internal ViewEnumerator(Binder binder) => (_binder, _index) = (binder, -1);
 
         /// <summary>
         /// Dispose of iterator.
@@ -66,18 +47,15 @@ namespace Simplecs {
         /// </summary>
         /// <returns>True if there is more data.</returns>
         public bool MoveNext() {
-            if (_version != _view.Version) {
-                throw new InvalidOperationException(message:"Enumerating a modified collection.");
-            }
+            var entities = _binder.PotentialEntities;
 
-            int max = _view.MaximumIndex;
-
-            if (_index == max) {
+            if (_index == entities.Count) {
                 return false;
             }
 
-            while (++_index < max) {
-                if (_view.TryGetAt(_index, ref _tuple)) {
+            while (++_index < entities.Count) {
+                var entity = entities[_index];
+                if (_binder.Contains(entity)) {
                     return true;
                 }
             }

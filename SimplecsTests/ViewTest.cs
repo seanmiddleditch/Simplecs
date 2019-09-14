@@ -72,25 +72,55 @@ namespace SimplecsTests {
 
             Assert.AreEqual(expected: new NameComponent { name = "Bob" }, actual: nameView.FirstOrDefault().Component);
             Assert.AreEqual(expected: new IntComponent { x = 7 }, actual: intView.FirstOrDefault().Component);
-            
+
             Assert.AreEqual(expected: new NameComponent { name = "Bob" }, actual: bothView.FirstOrDefault().Component1);
             Assert.AreEqual(expected: new IntComponent { x = 7 }, actual: bothView.FirstOrDefault().Component2);
         }
 
         [Test]
-        public void Invalidate() {
+        public void Access() {
             var world = new World();
-            world.CreateEntity().Attach(new IntComponent { x = 7 });
-            var entity = world.CreateEntity().Attach(new IntComponent { x = 9 }).Entity;
-            world.CreateEntity().Attach(new IntComponent { x = 11 });
+            var entity1 = world.CreateEntity()
+                .Attach(new NameComponent { name = "Bob" })
+                .Attach(new IntComponent { x = 7 })
+                .Entity;
 
-            var view = world.CreateView().Select<IntComponent>();
+            var entity2 = world.CreateEntity()
+                .Attach(new NameComponent { name = "Susan" })
+                .Attach(new IntComponent { x = 90 })
+                .Entity;
 
-            Assert.Throws<InvalidOperationException>(() => {
-                foreach (var row in view) {
-                    world.Destroy(entity);
-                }
-            });
+            var entity3 = world.CreateEntity()
+                .Attach(new IntComponent { x = -1 })
+                .Entity;
+
+            var view = world.CreateView().Select<IntComponent, NameComponent>();
+
+            Assert.IsTrue(view.Contains(entity1));
+            Assert.IsTrue(view.Contains(entity2));
+            Assert.IsFalse(view.Contains(entity3));
+
+            Assert.IsTrue(view.TryGet(entity1, out var binding1));
+            Assert.IsTrue(view.TryGet(entity2, out var binding2));
+            
+            Assert.AreEqual(expected: 7, actual: binding1.Component1.x);
+            Assert.AreEqual(expected: 90, actual: binding2.Component1.x);
         }
+
+        // [Test]
+        // public void Invalidate() {
+        //     var world = new World();
+        //     world.CreateEntity().Attach(new IntComponent { x = 7 });
+        //     var entity = world.CreateEntity().Attach(new IntComponent { x = 9 }).Entity;
+        //     world.CreateEntity().Attach(new IntComponent { x = 11 });
+
+        //     var view = world.CreateView().Select<IntComponent>();
+
+        //     Assert.Throws<InvalidOperationException>(() => {
+        //         foreach (var row in view) {
+        //             world.Destroy(entity);
+        //         }
+        //     });
+        // }
     }
 }

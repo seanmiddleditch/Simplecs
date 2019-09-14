@@ -18,12 +18,14 @@ namespace Simplecs {
     internal interface IComponentTable {
         Type Type { get; }
         int Count { get; }
-        int Version { get; }
+        IReadOnlyList<Entity> Entities { get; }
 
         bool Contains(Entity entity);
         bool Remove(Entity entity);
         void Add(Entity entity, object component);
         bool TryGet(Entity entity, out object data);
+        int IndexOf(Entity entity);
+        Entity EntityAt(int index);
         void Clear();
     }
 
@@ -35,35 +37,42 @@ namespace Simplecs {
         private ChunkedStorage<T> _data = new ChunkedStorage<T>();
         private List<Entity> _entities = new List<Entity>();
         private List<int> _mapping = new List<int>();
-        private int _version = 0;
 
         public delegate void Callback(Entity entity, ref T component);
 
         public Type Type => typeof(T);
         public int Count => _entities.Count;
-        public int Version => _version;
 
-        public bool Contains(Entity entity) {
+        public IReadOnlyList<Entity> Entities => _entities;
+        public ChunkedStorage<T> Components => _data;
+
+        public bool Contains(Entity entity) => IndexOf(entity) != -1;
+        
+        public int IndexOf(Entity entity) {
             int mappingIndex = EntityUtil.DecomposeIndex(entity);
 
-            return mappingIndex >= 0 &&
-                mappingIndex < _mapping.Count &&
-                _mapping[mappingIndex] < _entities.Count &&
-                _entities[_mapping[mappingIndex]].key == entity.key;
+            if (mappingIndex < 0 || mappingIndex >= _mapping.Count) {
+                return -1;
+            }
+
+            int dataIndex = _mapping[mappingIndex];
+            if (dataIndex >= _entities.Count) {
+                return -1;
+            }
+
+            return _entities[dataIndex] == entity ? dataIndex : -1;
         }
 
         public bool Remove(Entity entity) {
-            if (!Contains(entity)) {
+            int dataIndex = IndexOf(entity);
+            if (dataIndex == -1) {
                 return false;
             }
-
-            int mappingIndex = EntityUtil.DecomposeIndex(entity);
-            int dataIndex = _mapping[mappingIndex];
 
             // Mark the mapping as invalid so the entity can no longer be
             // queried directly.
             //
-            _mapping[mappingIndex] = int.MaxValue;
+            _mapping[EntityUtil.DecomposeIndex(entity)] = int.MaxValue;
 
             // Update mapping for the last component which is going to be moved into
             // the removed location.
@@ -81,38 +90,25 @@ namespace Simplecs {
             _entities.RemoveAt(_entities.Count - 1);
             _data.RemoveAt(_data.Count - 1);
 
-            // Reordering components can invalid any executing enumerators.
-            //
-            ++_version;
-
             return true;
         }
 
-        /// <summary>
-        /// Adds a component to the table.
-        /// </summary>
-        /// <param name="entity">Entity key.</param>
-        /// <param name="data">Component data to add.</param>
         public void Add(Entity entity, in T data) {
-            if (Contains(entity)) {
-                _data[_mapping[EntityUtil.DecomposeIndex(entity)]] = data;
+            int dataIndex = IndexOf(entity);
+            if (dataIndex != -1) {
+                _data[dataIndex] = data;
                 return;
             }
 
-            int index = EntityUtil.DecomposeIndex(entity);
-            if (index >= _mapping.Count) {
-                _mapping.AddRange(Enumerable.Repeat(int.MaxValue, index - _mapping.Count + 1));
+            int mappingIndex = EntityUtil.DecomposeIndex(entity);
+            if (mappingIndex >= _mapping.Count) {
+                _mapping.AddRange(Enumerable.Repeat(int.MaxValue, mappingIndex - _mapping.Count + 1));
             }
 
-            _mapping[index] = _entities.Count;
+            _mapping[mappingIndex] = _entities.Count;
 
             _entities.Add(entity);
             _data.Add(data);
-
-            // While this add operation is safe in the current data structure, we don't want
-            // to support this as a guarantee, so invalid enumerators.
-            //
-            ++_version;
         }
 
         void IComponentTable.Add(Entity entity, object component) {
@@ -133,29 +129,21 @@ namespace Simplecs {
             return true;
         }
 
-        /// <summary>
-        /// Attempts to retrieve component data stored for an entity key.
-        /// </summary>
-        /// <param name="entity">Entity key.</param>
-        /// <param name="data">Component data associated with key.</param>
-        /// <returns>True if an entry existed for the supplied key.</returns>
         public bool TryGet(Entity entity, out T data) {
-            if (!Contains(entity)) {
-                data = default(T);
-                return false;
-            }
+            int dataIndex = IndexOf(entity);
+            bool isValid = dataIndex != -1;
 
-            data = _data[_mapping[EntityUtil.DecomposeIndex(entity)]];
-            return true;
+            data = isValid ? _data[dataIndex] : default(T);
+            return isValid;
         }
 
+        public Entity EntityAt(int index) => _entities[index];
+
         public ref T this[Entity entity] => ref _data[_mapping[EntityUtil.DecomposeIndex(entity)]];
-        public Entity this[int index] => _entities[index];
 
         public void Clear() {
             _data.Clear();
             _entities.Clear();
-            ++_version;
         }
     }
 }

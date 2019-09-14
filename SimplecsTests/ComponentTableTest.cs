@@ -27,7 +27,7 @@ namespace SimplecsTests {
             table.Add(key1, new NameComponent { name = "Susan" });
 
             Assert.AreEqual(expected: 1, table.Count);
-            Assert.AreEqual(expected: key1, actual: table[0]);
+            Assert.AreEqual(expected: key1, actual: table.EntityAt(0));
             Assert.AreEqual(expected: "Susan", actual: table[key1].name);
         }
 
@@ -38,14 +38,14 @@ namespace SimplecsTests {
             table.Add(key1, new NameComponent { name = "Bob" });
             table.Add(key3, new NameComponent { name = "Frank" });
             Assert.AreEqual(expected: 2, actual: table.Count);
-            Assert.AreEqual(expected: key1, actual: table[0]);
+            Assert.AreEqual(expected: key1, actual: table.EntityAt(0));
             Assert.AreEqual(expected: "Bob", actual: table[key1].name);
 
             Assert.IsTrue(table.Remove(key1));
             Assert.IsFalse(table.Remove(key1));
             Assert.AreEqual(expected: 1, actual: table.Count);
 
-            Assert.AreEqual(expected: key3, actual: table[0]);
+            Assert.AreEqual(expected: key3, actual: table.EntityAt(0));
             Assert.AreEqual(expected: "Frank", actual: table[key3].name);
 
             table.Add(key2, new NameComponent { name = "Susan" });
@@ -54,7 +54,7 @@ namespace SimplecsTests {
             Assert.IsTrue(table.Remove(key3));
             Assert.AreEqual(expected: 1, actual: table.Count);
 
-            Assert.AreEqual(expected: key2, actual: table[0]);
+            Assert.AreEqual(expected: key2, actual: table.EntityAt(0));
             Assert.AreEqual(expected: "Susan", actual: table[key2].name);
         }
 

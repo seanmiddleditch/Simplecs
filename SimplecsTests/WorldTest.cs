@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Simplecs;
+using System;
 using System.Linq;
 
 namespace SimplecsTests {
@@ -56,18 +57,24 @@ namespace SimplecsTests {
 
             Assert.AreEqual(expected: 2, world.ComponentsOn(entity).Count());
 
-            object first = world.ComponentsOn(entity).ElementAt(0);
-            object second = world.ComponentsOn(entity).ElementAt(1);
+            Type firstType = world.ComponentsOn(entity).ElementAt(0);
+            Type secondType = world.ComponentsOn(entity).ElementAt(1);
+
+            object first = world.GetComponent(entity, firstType);
+            object second = world.GetComponent(entity, secondType);
 
             // Iteration order isn't guaranteed so be careful about assumptions here.
             //
-            if (first.GetType() == typeof(IntComponent)) {
+            if (firstType == typeof(IntComponent)) {
+                Assert.AreEqual(expected: typeof(NameComponent), actual: secondType);
                 Assert.AreEqual(expected: 90, actual: ((IntComponent)first).x);
                 Assert.AreEqual(expected: "Susan", actual: ((NameComponent)second).name);
-            }
-            else {
+            } else if (firstType == typeof(NameComponent)) {
+                Assert.AreEqual(expected: typeof(NameComponent), actual: firstType);
                 Assert.AreEqual(expected: "Susan", actual: ((NameComponent)first).name);
                 Assert.AreEqual(expected: 90, actual: ((IntComponent)second).x);
+            } else {
+                Assert.Fail(message: $"Incorrect type retrieved by world.ComponentsOn: {firstType?.ToString()}");
             }
         }
     }

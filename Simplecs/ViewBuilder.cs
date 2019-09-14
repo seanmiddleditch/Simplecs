@@ -11,6 +11,7 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Simplecs {
     /// <summary>
@@ -22,7 +23,8 @@ namespace Simplecs {
     /// </summary>
     public class ViewBuilder {
         private World _world;
-        private ViewPredicate? _predicate;
+        private List<IComponentTable>? _required;
+        private List<IComponentTable>? _excluded;
 
         internal ViewBuilder(World world) => _world = world;
 
@@ -31,8 +33,8 @@ namespace Simplecs {
         /// though it will not be in the selected component set.
         /// </summary>
         public ViewBuilder Require<T>() where T : struct {
-            _predicate ??= new ViewPredicate();
-            _predicate.Require(_world.GetTable<T>());
+            _required ??= new List<IComponentTable>();
+            _required.Add(_world.GetTable<T>());
             return this;
         }
 
@@ -41,32 +43,27 @@ namespace Simplecs {
         /// meaning that it cannot be present on matched entities.
         /// </summary>
         public ViewBuilder Exclude<T>() where T : struct {
-            _predicate ??= new ViewPredicate();
-            _predicate.Exclude(_world.GetTable<T>());
+            _excluded ??= new List<IComponentTable>();
+            _excluded.Add(_world.GetTable<T>());
             return this;
         }
 
         /// <summary>
         /// Creates a View that selects the specified component.
         /// </summary>
-        public View<T> Select<T>() where T : struct => new View<T>(Table<T>(), Predicate());
+        public View<Binding<T>.Binder, Binding<T>> Select<T>() where T : struct => new View<Binding<T>.Binder, Binding<T>>(new Binding<T>.Binder(Table<T>(), Predicate()));
 
         /// <summary>
         /// Creates a View that selects the specified components.
         /// </summary>
-        public View<T1, T2> Select<T1, T2>() where T1 : struct where T2 : struct => new View<T1, T2>(Table<T1>(), Table<T2>(), Predicate());
+        public View<Binding<T1, T2>.Binder, Binding<T1, T2>> Select<T1, T2>() where T1 : struct where T2 : struct => new View<Binding<T1, T2>.Binder, Binding<T1, T2>>(new Binding<T1, T2>.Binder(Table<T1>(), Table<T2>(), Predicate()));
 
         /// <summary>
         /// Creates a View that selects the specified components.
         /// </summary>
-        public View<T1, T2, T3> Select<T1, T2, T3>() where T1 : struct where T2 : struct where T3 : struct => new View<T1, T2, T3>(Table<T1>(), Table<T2>(), Table<T3>(), Predicate());
+        public View<Binding<T1, T2, T3>.Binder, Binding<T1, T2, T3>> Select<T1, T2, T3>() where T1 : struct where T2 : struct where T3 : struct => new View<Binding<T1, T2, T3>.Binder, Binding<T1, T2, T3>>(new Binding<T1, T2, T3>.Binder(Table<T1>(), Table<T2>(), Table<T3>(), Predicate()));
 
-        private ViewPredicate Predicate() {
-            var predicate = _predicate ?? new ViewPredicate();
-            _predicate = null;
-            return predicate;
-        }
-
+        private ViewPredicate Predicate() => new ViewPredicate(tables: _excluded != null ? (_required != null ? _excluded.Concat(_required).ToArray() : _excluded.ToArray()) : _required?.ToArray(), excludedCount: _excluded?.Count ?? 0);
         private ComponentTable<T> Table<T>() where T : struct => _world.GetTable<T>();
     }
 }
