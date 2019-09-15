@@ -10,18 +10,30 @@
 // with this software. If not, see
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Runtime.CompilerServices;
 using Simplecs.Containers;
 
 namespace Simplecs {
     /// <summary>
     /// Wrapper that provides array-like indexing from an entity to a component.
     /// </summary>
-    public struct ComponentMapper<T> where T : struct {
+    internal struct ComponentMapper<T> where T : struct {
         private ComponentTable<T> _table;
 
-        internal ComponentMapper(ComponentTable<T> table) => _table = table;
+        public ComponentMapper(ComponentTable<T> table) => _table = table;
 
-        public ref T this[Entity entity] => ref _table.GetComponentRef(entity, _table.IndexOf(entity));
+        public ref T this[Entity entity] {
+            [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+            get => ref _table.ReferenceAt(new RowKey(entity, IndexOf(entity)));
+        }
+
+        public ref T this[RowKey key] {
+            [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+            get => ref _table.ReferenceAt(key);
+        }
+
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public int IndexOf(Entity entity) => _table.IndexOf(entity);
     }
 
 }

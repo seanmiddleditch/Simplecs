@@ -18,7 +18,6 @@ namespace Simplecs.Containers {
     internal interface IComponentTable {
         Type Type { get; }
         int Count { get; }
-        IReadOnlyList<Entity> Entities { get; }
 
         bool Contains(Entity entity);
         bool Remove(Entity entity);
@@ -42,9 +41,6 @@ namespace Simplecs.Containers {
 
         public Type Type => typeof(T);
         public int Count => _entities.Count;
-
-        public IReadOnlyList<Entity> Entities => _entities;
-        public ChunkedStorage<T> Components => _data;
 
         public bool Contains(Entity entity) => IndexOf(entity) != -1;
         
@@ -139,14 +135,12 @@ namespace Simplecs.Containers {
 
         public Entity EntityAt(int index) => _entities[index];
 
-        public Entity CheckedEntityAt(int index) => index >= 0 && index < _entities.Count ? _entities[index] : Entity.Invalid;
-
-        public ref T GetComponentRef(Entity entity, int index) {
-            if (_entities[index] != entity) {
+        public ref T ReferenceAt(RowKey key) {
+            if (_entities[key.Index] != key.Entity) {
                 throw new InvalidOperationException(message:"Dereference on invalidated binding.");
             }
 
-            return ref _data[index];
+            return ref _data[key.Index];
         }
 
         public void Clear() {
