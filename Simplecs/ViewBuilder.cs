@@ -53,17 +53,17 @@ namespace Simplecs {
         /// <summary>
         /// Creates a View that selects the specified component.
         /// </summary>
-        public View<Binding<T>.Binder, Binding<T>> Select<T>() where T : struct => new View<Binding<T>.Binder, Binding<T>>(new Binding<T>.Binder(Table<T>(), Predicate()));
+        public View<T> Select<T>() where T : struct => new View<T>(Table<T>(), Predicate());
 
         /// <summary>
         /// Creates a View that selects the specified components.
         /// </summary>
-        public View<Binding<T1, T2>.Binder, Binding<T1, T2>> Select<T1, T2>() where T1 : struct where T2 : struct => new View<Binding<T1, T2>.Binder, Binding<T1, T2>>(new Binding<T1, T2>.Binder(Table<T1>(), Table<T2>(), Predicate()));
+        public View<T1, T2> Select<T1, T2>() where T1 : struct where T2 : struct => new View<T1, T2>(Table<T1>(), Table<T2>(), Predicate());
 
         /// <summary>
         /// Creates a View that selects the specified components.
         /// </summary>
-        public View<Binding<T1, T2, T3>.Binder, Binding<T1, T2, T3>> Select<T1, T2, T3>() where T1 : struct where T2 : struct where T3 : struct => new View<Binding<T1, T2, T3>.Binder, Binding<T1, T2, T3>>(new Binding<T1, T2, T3>.Binder(Table<T1>(), Table<T2>(), Table<T3>(), Predicate()));
+        public View<T1, T2, T3> Select<T1, T2, T3>() where T1 : struct where T2 : struct where T3 : struct => new View<T1, T2, T3>(Table<T1>(), Table<T2>(), Table<T3>(), Predicate());
 
         private ViewPredicate Predicate() => new ViewPredicate(tables: _excluded != null ? (_required != null ? _excluded.Concat(_required).ToArray() : _excluded.ToArray()) : _required?.ToArray(), excludedCount: _excluded?.Count ?? 0);
         private ComponentTable<T> Table<T>() where T : struct => _world.GetTable<T>();

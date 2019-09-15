@@ -13,6 +13,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Simplecs.Containers;
 
 namespace Simplecs.Views {
     /// <summary>
@@ -27,36 +28,20 @@ namespace Simplecs.Views {
         bool Contains(Entity entity);
     }
 
-    /// <summary>
-    /// A collection of entities that match a particular signature.
-    /// </summary>
-    public sealed class View<Binder, Binding> : IView, IEnumerable<Binding> where Binder : IBinder<Binding> where Binding : struct {
-        private Binder _binder;
+    public sealed class View<T> : IView, IEnumerable<ViewRow<T>> where T : struct {
+        private ComponentTable<T> _table;
+        private ViewPredicate _predicate;
 
-        internal View(Binder binder) => _binder = binder;
+        internal View(ComponentTable<T> table, ViewPredicate predicate) => (_table, _predicate) = (table, predicate);
 
         /// <summary>
         /// Checks if the View contains a given entity.
         /// </summary>
         /// <param name="entity">Entity to check.</param>
         /// <returns>True if the entity is contained in the view.</returns>
-        public bool Contains(Entity entity) => _binder.Contains(entity);
+        public bool Contains(Entity entity) => _table.Contains(entity) && _predicate.IsAllowed(entity);
 
-        /// <summary>
-        /// Attempts to retrieve the binding for a particular entity.
-        /// </summary>
-        /// <param name="entity">Entity to query.</param>
-        /// <param name="binding">Component binding, if available.</param>
-        /// <returns>True if the entity is contained in the view.</returns>
-        public bool TryGet(Entity entity, out Binding binding) {
-            if (Contains(entity)) {
-                binding = _binder.Bind(entity);
-                return true;
-            }
-
-            binding = default(Binding);
-            return false;
-        }
+        public ComponentMapper<T> Component => new ComponentMapper<T>(_table);
 
         /// <summary>
         /// Enumerator for matched entities and components.
@@ -65,8 +50,73 @@ namespace Simplecs.Views {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewRefEnumerator<Binder, Binding> GetEnumerator() => new ViewRefEnumerator<Binder, Binding>(_binder);
-        IEnumerator<Binding> IEnumerable<Binding>.GetEnumerator() => new ViewEnumerator<Binder, Binding>(_binder);
+        public ViewEnumerator<T> GetEnumerator() => new ViewEnumerator<T>(this, _table);
+        IEnumerator<ViewRow<T>> IEnumerable<ViewRow<T>>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+    }
+
+    public sealed class View<T1, T2> : IView, IEnumerable<ViewRow<T1, T2>>
+        where T1 : struct
+        where T2 : struct {
+        private ComponentTable<T1> _table1;
+        private ComponentTable<T2> _table2;
+        private ViewPredicate _predicate;
+
+        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_table1, _table2, _predicate) = (table1, table2, predicate);
+
+        /// <summary>
+        /// Checks if the View contains a given entity.
+        /// </summary>
+        /// <param name="entity">Entity to check.</param>
+        /// <returns>True if the entity is contained in the view.</returns>
+        public bool Contains(Entity entity) => _table1.Contains(entity) && _table2.Contains(entity) && _predicate.IsAllowed(entity);
+
+        public ComponentMapper<T1> Component1 => new ComponentMapper<T1>(_table1);
+        public ComponentMapper<T2> Component2 => new ComponentMapper<T2>(_table2);
+
+        /// <summary>
+        /// Enumerator for matched entities and components.
+        /// 
+        /// Note that components are returned _by value_ and hence
+        /// should not be modified.
+        /// </summary>
+        /// <returns>Entity and component enumerator.</returns>
+        public ViewEnumerator2<T1, T2> GetEnumerator() => new ViewEnumerator2<T1, T2>(this, _table1);
+        IEnumerator<ViewRow<T1, T2>> IEnumerable<ViewRow<T1, T2>>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+    }
+
+    public sealed class View<T1, T2, T3> : IView, IEnumerable<ViewRow<T1, T2, T3>>
+        where T1 : struct
+        where T2 : struct
+        where T3 : struct {
+        private ComponentTable<T1> _table1;
+        private ComponentTable<T2> _table2;
+        private ComponentTable<T3> _table3;
+        private ViewPredicate _predicate;
+
+        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_table1, _table2, _table3, _predicate) = (table1, table2, table3, predicate);
+
+        /// <summary>
+        /// Checks if the View contains a given entity.
+        /// </summary>
+        /// <param name="entity">Entity to check.</param>
+        /// <returns>True if the entity is contained in the view.</returns>
+        public bool Contains(Entity entity) => _table1.Contains(entity) && _table2.Contains(entity) && _predicate.IsAllowed(entity);
+
+        public ComponentMapper<T1> Component1 => new ComponentMapper<T1>(_table1);
+        public ComponentMapper<T2> Component2 => new ComponentMapper<T2>(_table2);
+        public ComponentMapper<T3> Component3 => new ComponentMapper<T3>(_table3);
+
+        /// <summary>
+        /// Enumerator for matched entities and components.
+        /// 
+        /// Note that components are returned _by value_ and hence
+        /// should not be modified.
+        /// </summary>
+        /// <returns>Entity and component enumerator.</returns>
+        public ViewEnumerator2<T1, T2, T3> GetEnumerator() => new ViewEnumerator2<T1, T2, T3>(this, _table1);
+        IEnumerator<ViewRow<T1, T2, T3>> IEnumerable<ViewRow<T1, T2, T3>>.GetEnumerator() => GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
 }

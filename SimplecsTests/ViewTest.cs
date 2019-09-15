@@ -101,11 +101,8 @@ namespace SimplecsTests {
             Assert.IsTrue(view.Contains(entity2));
             Assert.IsFalse(view.Contains(entity3));
 
-            Assert.IsTrue(view.TryGet(entity1, out var binding1));
-            Assert.IsTrue(view.TryGet(entity2, out var binding2));
-            
-            Assert.AreEqual(expected: 7, actual: binding1.Component1.x);
-            Assert.AreEqual(expected: 90, actual: binding2.Component1.x);
+            Assert.AreEqual(expected: 7, actual: view.Component1[entity1].x);
+            Assert.AreEqual(expected: 90, actual: view.Component1[entity2].x);
         }
 
         [Test]
