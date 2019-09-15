@@ -26,7 +26,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: Simplecs.0.0.1.nupkg
-          path: Simplecs/bin/Release
+          path: pkg/Simplecs
         name: Publish Nupkg
         if: matrix.config == 'Release'
       - uses: actions/upload-artifact@master
