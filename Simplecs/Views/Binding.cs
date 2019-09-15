@@ -49,17 +49,18 @@ namespace Simplecs.Views {
     /// Accessor for an entry from a View iterator.
     /// </summary>
     public struct Binding<T> where T : struct {
+        private Entity _entity;
         private ComponentTable<T> _table;
         private int _index;
 
         /// <value>Current entity key.</value>
-        public Entity Entity { get; }
+        public Entity Entity => _entity;
 
         /// <value>Current component data.</value>
         public ref T Component => ref _table.GetComponentRef(Entity, _index);
 
         internal Binding(Entity entity, ComponentTable<T> table) {
-            Entity = entity;
+            _entity = entity;
             _table = table;
             _index = _table.IndexOf(entity);
         }
@@ -83,38 +84,38 @@ namespace Simplecs.Views {
     /// Accessor for an entry from a View iterator.
     /// </summary>
     public struct Binding<T1, T2> where T1 : struct where T2 : struct {
-        private ComponentTable<T1> _table1;
-        private ComponentTable<T2> _table2;
+        private Entity _entity;
+        private Tables _tables;
         private int _index1, _index2;
 
         /// <value>Current entity key.</value>
-        public Entity Entity { get; }
+        public Entity Entity => _entity;
 
         /// <value>Current component data.</value>
-        public ref T1 Component1 => ref _table1.GetComponentRef(Entity, _index1);
+        public ref T1 Component1 => ref _tables.Table1.GetComponentRef(Entity, _index1);
 
         /// <value>Current component data.</value>
-        public ref T2 Component2 => ref _table2.GetComponentRef(Entity, _index2);
+        public ref T2 Component2 => ref _tables.Table2.GetComponentRef(Entity, _index2);
 
-        internal Binding(Entity entity, ComponentTable<T1> table1, ComponentTable<T2> table2) {
-            Entity = entity;
-            (_table1, _table2) = (table1, table2);
-            (_index1, _index2) = (table1.IndexOf(entity), table2.IndexOf(entity));
+        internal Binding(Entity entity, Tables tables) => (_entity, _tables, _index1, _index2) = (entity, tables, tables.Table1.IndexOf(entity), tables.Table2.IndexOf(entity));
+
+        internal struct Tables {
+            public ComponentTable<T1> Table1;
+            public ComponentTable<T2> Table2;
         }
 
         /// <summary>
         /// Binder for this binding.
         /// </summary>
         public struct Binder : IBinder<Binding<T1, T2>> {
-            internal ViewPredicate Predicate;
-            internal ComponentTable<T1> Table1;
-            internal ComponentTable<T2> Table2;
+            private ViewPredicate _predicate;
+            private Tables _tables;
 
-            internal Binder(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (Table1, Table2, Predicate) = (table1, table2, predicate);
+            internal Binder(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_tables.Table1, _tables.Table2, _predicate) = (table1, table2, predicate);
 
-            bool IBinder<Binding<T1, T2>>.Contains(Entity entity) => Predicate.IsAllowed(entity) && Table1.Contains(entity) && Table2.Contains(entity);
-            Binding<T1, T2> IBinder<Binding<T1, T2>>.Bind(Entity entity) => new Binding<T1, T2>(entity, Table1, Table2);
-            IReadOnlyList<Entity> IBinder<Binding<T1, T2>>.PotentialEntities => Table1.Entities;
+            bool IBinder<Binding<T1, T2>>.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity);
+            Binding<T1, T2> IBinder<Binding<T1, T2>>.Bind(Entity entity) => new Binding<T1, T2>(entity, _tables);
+            IReadOnlyList<Entity> IBinder<Binding<T1, T2>>.PotentialEntities => _tables.Table1.Entities;
         }
     }
 
@@ -122,43 +123,42 @@ namespace Simplecs.Views {
     /// Accessor for an entry from a View iterator.
     /// </summary>
     public struct Binding<T1, T2, T3> where T1 : struct where T2 : struct where T3 : struct {
-        private ComponentTable<T1> _table1;
-        private ComponentTable<T2> _table2;
-        private ComponentTable<T3> _table3;
+        private Entity _entity;
+        private Tables _tables;
         private int _index1, _index2, _index3;
 
         /// <value>Current entity key.</value>
-        public Entity Entity { get; }
+        public Entity Entity => _entity;
 
         /// <value>Current component data.</value>
-        public ref T1 Component1 => ref _table1.GetComponentRef(Entity, _index1);
+        public ref T1 Component1 => ref _tables.Table1.GetComponentRef(Entity, _index1);
 
         /// <value>Current component data.</value>
-        public ref T2 Component2 => ref _table2.GetComponentRef(Entity, _index2);
+        public ref T2 Component2 => ref _tables.Table2.GetComponentRef(Entity, _index2);
 
         /// <value>Current component data.</value>
-        public ref T3 Component3 => ref _table3.GetComponentRef(Entity, _index3);
+        public ref T3 Component3 => ref _tables.Table3.GetComponentRef(Entity, _index3);
 
-        internal Binding(Entity entity, ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3) {
-            Entity = entity;
-            (_table1, _table2, _table3) = (table1, table2, table3);
-            (_index1, _index2, _index3) = (table1.IndexOf(entity), table2.IndexOf(entity), table3.IndexOf(entity));
+        internal Binding(Entity entity, Tables tables) => (_entity, _tables, _index1, _index2, _index3) = (entity, tables, tables.Table1.IndexOf(entity), tables.Table2.IndexOf(entity), tables.Table3.IndexOf(entity));
+
+        internal struct Tables {
+            public ComponentTable<T1> Table1;
+            public ComponentTable<T2> Table2;
+            public ComponentTable<T3> Table3;
         }
 
         /// <summary>
         /// Binder for this binding.
         /// </summary>
         public struct Binder : IBinder<Binding<T1, T2, T3>> {
-            internal ViewPredicate Predicate;
-            internal ComponentTable<T1> Table1;
-            internal ComponentTable<T2> Table2;
-            internal ComponentTable<T3> Table3;
+            private ViewPredicate _predicate;
+            private Tables _tables;
 
-            internal Binder(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (Table1, Table2, Table3, Predicate) = (table1, table2, table3, predicate);
+            internal Binder(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_tables.Table1, _tables.Table2, _tables.Table3, _predicate) = (table1, table2, table3, predicate);
 
-            bool IBinder<Binding<T1, T2, T3>>.Contains(Entity entity) => Predicate.IsAllowed(entity) && Table1.Contains(entity) && Table2.Contains(entity) && Table3.Contains(entity);
-            Binding<T1, T2, T3> IBinder<Binding<T1, T2, T3>>.Bind(Entity entity) => new Binding<T1, T2, T3>(entity, Table1, Table2, Table3);
-            IReadOnlyList<Entity> IBinder<Binding<T1, T2, T3>>.PotentialEntities => Table1.Entities;
+            bool IBinder<Binding<T1, T2, T3>>.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity) && _tables.Table3.Contains(entity);
+            Binding<T1, T2, T3> IBinder<Binding<T1, T2, T3>>.Bind(Entity entity) => new Binding<T1, T2, T3>(entity, _tables);
+            IReadOnlyList<Entity> IBinder<Binding<T1, T2, T3>>.PotentialEntities => _tables.Table1.Entities;
         }
     }
 }
