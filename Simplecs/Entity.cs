@@ -22,6 +22,11 @@ namespace Simplecs {
         internal uint key;
 
         /// <summary>
+        /// Invalid Entity constant.
+        /// </summary>
+        public static Entity Invalid = new Entity();
+
+        /// <summary>
         /// Tests equality.
         /// </summary>
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]

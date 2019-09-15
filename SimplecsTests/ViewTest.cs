@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Simplecs;
+using Simplecs.Containers;
 using System;
 using System.Linq;
 
@@ -105,6 +106,25 @@ namespace SimplecsTests {
             
             Assert.AreEqual(expected: 7, actual: binding1.Component1.x);
             Assert.AreEqual(expected: 90, actual: binding2.Component1.x);
+        }
+
+        [Test]
+        public void DestroyLoop() {
+            var world = new World();
+
+            var view = world.CreateView().Select<IntComponent>();
+
+            for (int index = 0; index < EntityAllocator.FreeMinimum; ++index) {
+                world.CreateEntity().Attach(new IntComponent());
+            }
+
+            Assert.AreEqual(expected: EntityAllocator.FreeMinimum, actual: view.Count());
+
+            foreach (var row in view) {
+                world.Destroy(row.Entity);
+            }
+
+            Assert.AreEqual(expected: 0, actual: view.Count());
         }
 
         // [Test]

@@ -10,13 +10,15 @@
 // with this software. If not, see
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Collections.Generic;
 using Simplecs.Containers;
 
 namespace Simplecs.Views {
     /// <summary>
     /// Factory for bindings.
     /// </summary>
+    /// <note>
+    /// This should be treated as an internal/private type.
+    /// </note>
     /// <typeparam name="Binding">Binding accessed by this Binder.</typeparam>
     public interface IBinder<Binding> where Binding : struct {
         /// <summary>
@@ -39,15 +41,23 @@ namespace Simplecs.Views {
         Binding Bind(Entity entity);
 
         /// <summary>
-        /// Retrieves a list of _potential_ entities that may be bound.
+        /// Gets the _potential_ Entity at the given index.
         /// </summary>
-        /// <value>List of entities that may be bound.</value>
-        IReadOnlyList<Entity> PotentialEntities { get; }
+        /// <note>
+        /// The return Entities of this function are _not_ guaranteed to exist in the view,
+        /// and it is required to call Contains on each Entity to see if it is.
+        /// </note>
+        /// <value>Potential Entity at given posision, or Entity.Invalid if the index is out of range.</value>
+        Entity PotentialEntityAt(int index);
     }
 
     /// <summary>
     /// Accessor for an entry from a View iterator.
     /// </summary>
+    /// <note>
+    /// In an ideal world, this would be a ref struct. Unfortunately we can't pass
+    /// ref structs as type parameters in C# 8.
+    /// </note>
     public struct Binding<T> where T : struct {
         private Entity _entity;
         private ComponentTable<T> _table;
@@ -76,7 +86,7 @@ namespace Simplecs.Views {
 
             bool IBinder<Binding<T>>.Contains(Entity entity) => Predicate.IsAllowed(entity) && Table.Contains(entity);
             Binding<T> IBinder<Binding<T>>.Bind(Entity entity) => new Binding<T>(entity, Table);
-            IReadOnlyList<Entity> IBinder<Binding<T>>.PotentialEntities => Table.Entities;
+            Entity IBinder<Binding<T>>.PotentialEntityAt(int index) => Table.CheckedEntityAt(index);
         }
     }
 
@@ -115,7 +125,7 @@ namespace Simplecs.Views {
 
             bool IBinder<Binding<T1, T2>>.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity);
             Binding<T1, T2> IBinder<Binding<T1, T2>>.Bind(Entity entity) => new Binding<T1, T2>(entity, _tables);
-            IReadOnlyList<Entity> IBinder<Binding<T1, T2>>.PotentialEntities => _tables.Table1.Entities;
+            Entity IBinder<Binding<T1, T2>>.PotentialEntityAt(int index) => _tables.Table1.CheckedEntityAt(index);
         }
     }
 
@@ -158,7 +168,7 @@ namespace Simplecs.Views {
 
             bool IBinder<Binding<T1, T2, T3>>.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity) && _tables.Table3.Contains(entity);
             Binding<T1, T2, T3> IBinder<Binding<T1, T2, T3>>.Bind(Entity entity) => new Binding<T1, T2, T3>(entity, _tables);
-            IReadOnlyList<Entity> IBinder<Binding<T1, T2, T3>>.PotentialEntities => _tables.Table1.Entities;
+            Entity IBinder<Binding<T1, T2, T3>>.PotentialEntityAt(int index) => _tables.Table1.CheckedEntityAt(index);
         }
     }
 }

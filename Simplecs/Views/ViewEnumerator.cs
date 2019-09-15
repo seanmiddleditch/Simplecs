@@ -26,16 +26,17 @@ namespace Simplecs.Views {
     /// <typeparam name="Binder">View being enumerated.</typeparam>
     /// <typeparam name="Binding">Type of iteration.</typeparam>
     public struct ViewEnumerator<Binder, Binding> : IEnumerator<Binding> where Binder : IBinder<Binding> where Binding : struct {
+        private Entity _current;
         private Binder _binder;
         private int _index;
 
         /// <returns>Current value of iterator.</returns>
-        public Binding Current => _binder.Bind(_binder.PotentialEntities[_index]);
+        public Binding Current => _binder.Bind(_current);
 
         Binding IEnumerator<Binding>.Current => Current;
         object? IEnumerator.Current => throw new NotImplementedException();
 
-        internal ViewEnumerator(Binder binder) => (_binder, _index) = (binder, -1);
+        internal ViewEnumerator(Binder binder) => (_current, _binder, _index) = (Entity.Invalid, binder, -1);
 
         /// <summary>
         /// Dispose of iterator.
@@ -47,25 +48,31 @@ namespace Simplecs.Views {
         /// </summary>
         /// <returns>True if there is more data.</returns>
         public bool MoveNext() {
-            var entities = _binder.PotentialEntities;
-
-            if (_index == entities.Count) {
-                return false;
+            // If the current entity has changed (e.g. been deleted from under us)
+            // then don't initially increment the index. This allows Views to be used
+            // to loop over entities and destroy them.
+            //
+            if (_index == -1 || _current == _binder.PotentialEntityAt(_index)) {
+                ++_index;
             }
 
-            while (++_index < entities.Count) {
-                var entity = entities[_index];
-                if (_binder.Contains(entity)) {
+            while (true) {
+                _current = _binder.PotentialEntityAt(_index);
+                if (_current == Entity.Invalid) {
+                    return false;
+                }
+
+                if (_binder.Contains(_current)) {
                     return true;
                 }
-            }
 
-            return false;
+                ++_index;
+            }
         }
 
         /// <summary>
         /// Resets the iterator to the beginning.
         /// </summary>
-        public void Reset() => _index = -1;
+        public void Reset() => (_current, _index) = (Entity.Invalid, -1);
     }
 }

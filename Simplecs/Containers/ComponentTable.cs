@@ -139,6 +139,8 @@ namespace Simplecs.Containers {
 
         public Entity EntityAt(int index) => _entities[index];
 
+        public Entity CheckedEntityAt(int index) => index >= 0 && index < _entities.Count ? _entities[index] : Entity.Invalid;
+
         public ref T GetComponentRef(Entity entity, int index) {
             if (_entities[index] != entity) {
                 throw new InvalidOperationException(message:"Dereference on invalidated binding.");
