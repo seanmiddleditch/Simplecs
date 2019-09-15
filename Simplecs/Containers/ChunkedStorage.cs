@@ -13,7 +13,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace Simplecs {
+namespace Simplecs.Containers {
     /// <summary>
     /// Stores a collection of values in semi-contiguous but stable memory.
     /// 
@@ -26,7 +26,6 @@ namespace Simplecs {
     /// <typeparam name="T">Type stored.</typeparam>
     public class ChunkedStorage<T> where T : struct {
         private List<T[]> _chunks = new List<T[]>();
-        private List<int> _chunkCounts = new List<int>();
         private int _chunkElementCount = 1024;
         private int _count = 0;
 
@@ -74,11 +73,10 @@ namespace Simplecs {
                 int chunkIndex = index / _chunkElementCount;
                 int slotIndex = index % _chunkElementCount;
 
-                _chunks[chunkIndex][slotIndex] = _chunks[_chunks.Count - 1][_chunkCounts[_chunkCounts.Count - 1] - 1];
+                _chunks[chunkIndex][slotIndex] = _chunks[_chunks.Count - 1][(_count % _chunkElementCount) - 1];
             }
 
             --_count;
-            --_chunkCounts[_chunkCounts.Count - 1];
         }
 
         /// <summary>
@@ -86,9 +84,6 @@ namespace Simplecs {
         /// </summary>
         public void Clear() {
             _count = 0;
-            for (int index = 0; index != _chunkCounts.Count; ++index) {
-                _chunkCounts[index] = 0;
-            }
         }
 
         /// <summary>
@@ -97,18 +92,20 @@ namespace Simplecs {
         public ref T this[int index] => ref _chunks[index / _chunkElementCount][index % _chunkElementCount];
 
         private (T[] chunk, int index) AllocateSlot() {
-            if (_chunks.Count == 0 || _chunkCounts[_chunkCounts.Count - 1] == _chunkElementCount) {
+            int chunkIndex = _count / _chunkElementCount;
+            int slotIndex = _count % _chunkElementCount;
+
+            if (_chunks.Count == chunkIndex) {
                 AllocateChunk();
             }
 
             ++_count;
-            return (_chunks[_chunks.Count - 1], _chunkCounts[_chunkCounts.Count - 1]++);
+            return (_chunks[_chunks.Count - 1], slotIndex);
         }
 
         private T[] AllocateChunk() {
             T[] chunk = new T[_chunkElementCount];
             _chunks.Add(chunk);
-            _chunkCounts.Add(0);
             return chunk;
         }
     }

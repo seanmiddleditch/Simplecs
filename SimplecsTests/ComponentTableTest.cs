@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Simplecs;
+using Simplecs.Containers;
 using System.Linq;
 
 namespace SimplecsTests {
@@ -27,8 +28,8 @@ namespace SimplecsTests {
             table.Add(key1, new NameComponent { name = "Susan" });
 
             Assert.AreEqual(expected: 1, table.Count);
-            Assert.AreEqual(expected: key1, actual: table[0]);
-            Assert.AreEqual(expected: "Susan", actual: table[key1].name);
+            Assert.AreEqual(expected: key1, actual: table.EntityAt(0));
+            Assert.AreEqual(expected: "Susan", actual: table.TryGet(key1, out var name) ? name.name : null);
         }
 
         [Test]
@@ -38,15 +39,15 @@ namespace SimplecsTests {
             table.Add(key1, new NameComponent { name = "Bob" });
             table.Add(key3, new NameComponent { name = "Frank" });
             Assert.AreEqual(expected: 2, actual: table.Count);
-            Assert.AreEqual(expected: key1, actual: table[0]);
-            Assert.AreEqual(expected: "Bob", actual: table[key1].name);
+            Assert.AreEqual(expected: key1, actual: table.EntityAt(0));
+            Assert.AreEqual(expected: "Bob", actual: table.TryGet(key1, out var name) ? name.name : null);
 
             Assert.IsTrue(table.Remove(key1));
             Assert.IsFalse(table.Remove(key1));
             Assert.AreEqual(expected: 1, actual: table.Count);
 
-            Assert.AreEqual(expected: key3, actual: table[0]);
-            Assert.AreEqual(expected: "Frank", actual: table[key3].name);
+            Assert.AreEqual(expected: key3, actual: table.EntityAt(0));
+            Assert.AreEqual(expected: "Frank", actual: table.TryGet(key3, out name) ? name.name : null);
 
             table.Add(key2, new NameComponent { name = "Susan" });
             Assert.AreEqual(expected: 2, actual: table.Count);
@@ -54,8 +55,8 @@ namespace SimplecsTests {
             Assert.IsTrue(table.Remove(key3));
             Assert.AreEqual(expected: 1, actual: table.Count);
 
-            Assert.AreEqual(expected: key2, actual: table[0]);
-            Assert.AreEqual(expected: "Susan", actual: table[key2].name);
+            Assert.AreEqual(expected: key2, actual: table.EntityAt(0));
+            Assert.AreEqual(expected: "Susan", actual: table.TryGet(key2, out name) ? name.name : null);
         }
 
         [Test]
@@ -66,15 +67,15 @@ namespace SimplecsTests {
             table.Add(key2, new IntComponent { x = 2 });
             table.Add(key3, new IntComponent { x = 3 });
 
-            Assert.AreEqual(expected: 2, actual: table[key2].x);
-            Assert.AreEqual(expected: 3, actual: table[key3].x);
+            Assert.AreEqual(expected: 2, actual: table.TryGet(key2, out var intComp) ? intComp.x : 0);
+            Assert.AreEqual(expected: 3, actual: table.TryGet(key3, out intComp) ? intComp.x : 0);
 
             table.Remove(key2);
 
             table.Add(key2, new IntComponent { x = 4 });
 
-            Assert.AreEqual(expected: 4, actual: table[key2].x);
-            Assert.AreEqual(expected: 3, actual: table[key3].x);
+            Assert.AreEqual(expected: 4, actual: table.TryGet(key2, out intComp) ? intComp.x : 0);
+            Assert.AreEqual(expected: 3, actual: table.TryGet(key3, out intComp) ? intComp.x : 0);
         }
     }
 }

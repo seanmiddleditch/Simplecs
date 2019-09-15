@@ -22,19 +22,49 @@ namespace Simplecs {
         internal uint key;
 
         /// <summary>
-        /// Compares to entities for quality.
+        /// Invalid Entity constant.
         /// </summary>
-        /// <param name="other">Entity to compare.</param>
-        /// <returns>True if both entities represent the same key.</returns>
-        public bool Equals(Entity other) {
-            return key == other.key;
-        }
+        public static Entity Invalid = new Entity();
+
+        /// <summary>
+        /// Tests equality.
+        /// </summary>
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(Entity lhs, Entity rhs) => lhs.key == rhs.key;
+
+        /// <summary>
+        /// Tests inequality.
+        /// </summary>
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(Entity lhs, Entity rhs) => lhs.key != rhs.key;
+
+        /// <summary>
+        /// Comparison for sorted containers.
+        /// </summary>
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static bool operator <(Entity lhs, Entity rhs) => lhs.key < rhs.key;
+
+        /// <summary>
+        /// Comparison for sorted containers.
+        /// </summary>
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static bool operator >(Entity lhs, Entity rhs) => lhs.key > rhs.key;
+
+        /// <summary>
+        /// Tests equality.
+        /// </summary>
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(Entity rhs) => key == rhs.key;
+
+        /// <summary>
+        /// Tests equality.
+        /// </summary>
+        public override bool Equals(object? rhs) => rhs is Entity rhsEntity && key == rhsEntity.key;
 
         /// <summary>
         /// Hash code of the entity.
         /// </summary>
-        /// <returns>Hash of the entity.</returns>
-        override public int GetHashCode() {
+        public override int GetHashCode() {
             return key.GetHashCode();
         }
     }
@@ -42,7 +72,7 @@ namespace Simplecs {
     internal static class EntityUtil {
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
         public static Entity MakeKey(int index, byte generation = 1) {
-            return new Entity{key=((uint)generation << 24) | ((uint)index & 0x00FFFFFF)};
+            return new Entity { key = ((uint)generation << 24) | ((uint)index & 0x00FFFFFF) };
         }
 
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
