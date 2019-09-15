@@ -106,7 +106,7 @@ namespace Simplecs.Views {
         /// </summary>
         /// <param name="entity">Entity to check.</param>
         /// <returns>True if the entity is contained in the view.</returns>
-        public bool Contains(Entity entity) => _table1.Contains(entity) && _table2.Contains(entity) && _predicate.IsAllowed(entity);
+        public bool Contains(Entity entity) => _table1.Contains(entity) && _table2.Contains(entity) && _table3.Contains(entity) && _predicate.IsAllowed(entity);
 
         /// <summary>
         /// Enumerator for matched entities and components.
