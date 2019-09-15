@@ -14,13 +14,9 @@ using Simplecs.Containers;
 
 namespace Simplecs.Views {
     /// <summary>
-    /// Factory for bindings.
+    /// Used to enumerate entities in a Binder.
     /// </summary>
-    /// <note>
-    /// This should be treated as an internal/private type.
-    /// </note>
-    /// <typeparam name="Binding">Binding accessed by this Binder.</typeparam>
-    public interface IBinder<Binding> where Binding : struct {
+    public interface IBinder {
         /// <summary>
         /// Checks if a given entity can be bound by this binder.
         /// </summary>
@@ -29,26 +25,61 @@ namespace Simplecs.Views {
         bool Contains(Entity entity);
 
         /// <summary>
+        /// Gets the _potential_ Entity at the given index.
+        /// </summary>
+        /// <note>
+        /// The return Entities of this function are _not_ guaranteed to exist in the view,
+        /// and it is required to call <see cref="Contains">Contains</see> on each Entity to see if it is.
+        /// </note>
+        /// <value>Potential Entity at given posision, or Entity.Invalid if the index is out of range.</value>
+        Entity PotentialEntityAt(int index);
+    }
+
+    internal static class BinderExtensions {
+        internal static bool FindNext<Binder>(this Binder binder, ref int index, ref Entity entity) where Binder : IBinder {
+            // If the current entity has changed (e.g. been deleted from under us)
+            // then don't initially increment the index. This allows Views to be used
+            // to loop over entities and destroy them.
+            //
+            if (index == -1 || entity == binder.PotentialEntityAt(index)) {
+                ++index;
+            }
+
+            while (true) {
+                entity = binder.PotentialEntityAt(index);
+                if (entity == Entity.Invalid) {
+                    return false;
+                }
+
+                if (binder.Contains(entity)) {
+                    return true;
+                }
+
+                ++index;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Factory for bindings.
+    /// </summary>
+    /// <note>
+    /// This should be treated as an internal/private type.
+    /// </note>
+    /// <typeparam name="Binding">Binding accessed by this Binder.</typeparam>
+    public interface IBinder<Binding> : IBinder where Binding : struct {
+        /// <summary>
         /// Binds an entity.
         /// </summary>
         /// <note>
         /// It is illegal to call this for entities that are not bindable.
         /// 
-        /// Use <see cref="Contains">Contains</see> to check if an entity is bindable.
+        /// Use <see cref="IBinder.Contains">Contains</see> to check if an entity is bindable.
         /// </note>
         /// <param name="entity">Entity to bind.</param>
         /// <returns>Binding.</returns>
         Binding Bind(Entity entity);
 
-        /// <summary>
-        /// Gets the _potential_ Entity at the given index.
-        /// </summary>
-        /// <note>
-        /// The return Entities of this function are _not_ guaranteed to exist in the view,
-        /// and it is required to call Contains on each Entity to see if it is.
-        /// </note>
-        /// <value>Potential Entity at given posision, or Entity.Invalid if the index is out of range.</value>
-        Entity PotentialEntityAt(int index);
     }
 
     /// <summary>
@@ -84,9 +115,9 @@ namespace Simplecs.Views {
 
             internal Binder(ComponentTable<T> table, ViewPredicate predicate) => (Table, Predicate) = (table, predicate);
 
-            bool IBinder<Binding<T>>.Contains(Entity entity) => Predicate.IsAllowed(entity) && Table.Contains(entity);
+            bool IBinder.Contains(Entity entity) => Predicate.IsAllowed(entity) && Table.Contains(entity);
+            Entity IBinder.PotentialEntityAt(int index) => Table.CheckedEntityAt(index);
             Binding<T> IBinder<Binding<T>>.Bind(Entity entity) => new Binding<T>(entity, Table);
-            Entity IBinder<Binding<T>>.PotentialEntityAt(int index) => Table.CheckedEntityAt(index);
         }
     }
 
@@ -123,9 +154,9 @@ namespace Simplecs.Views {
 
             internal Binder(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_tables.Table1, _tables.Table2, _predicate) = (table1, table2, predicate);
 
-            bool IBinder<Binding<T1, T2>>.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity);
+            bool IBinder.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity);
+            Entity IBinder.PotentialEntityAt(int index) => _tables.Table1.CheckedEntityAt(index);
             Binding<T1, T2> IBinder<Binding<T1, T2>>.Bind(Entity entity) => new Binding<T1, T2>(entity, _tables);
-            Entity IBinder<Binding<T1, T2>>.PotentialEntityAt(int index) => _tables.Table1.CheckedEntityAt(index);
         }
     }
 
@@ -166,9 +197,9 @@ namespace Simplecs.Views {
 
             internal Binder(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_tables.Table1, _tables.Table2, _tables.Table3, _predicate) = (table1, table2, table3, predicate);
 
-            bool IBinder<Binding<T1, T2, T3>>.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity) && _tables.Table3.Contains(entity);
+            bool IBinder.Contains(Entity entity) => _predicate.IsAllowed(entity) && _tables.Table1.Contains(entity) && _tables.Table2.Contains(entity) && _tables.Table3.Contains(entity);
+            Entity IBinder.PotentialEntityAt(int index) => _tables.Table1.CheckedEntityAt(index);
             Binding<T1, T2, T3> IBinder<Binding<T1, T2, T3>>.Bind(Entity entity) => new Binding<T1, T2, T3>(entity, _tables);
-            Entity IBinder<Binding<T1, T2, T3>>.PotentialEntityAt(int index) => _tables.Table1.CheckedEntityAt(index);
         }
     }
 }

@@ -47,28 +47,32 @@ namespace Simplecs.Views {
         /// Advances the iterator.
         /// </summary>
         /// <returns>True if there is more data.</returns>
-        public bool MoveNext() {
-            // If the current entity has changed (e.g. been deleted from under us)
-            // then don't initially increment the index. This allows Views to be used
-            // to loop over entities and destroy them.
-            //
-            if (_index == -1 || _current == _binder.PotentialEntityAt(_index)) {
-                ++_index;
-            }
+        public bool MoveNext() => _binder.FindNext(ref _index, ref _current);
 
-            while (true) {
-                _current = _binder.PotentialEntityAt(_index);
-                if (_current == Entity.Invalid) {
-                    return false;
-                }
+        /// <summary>
+        /// Resets the iterator to the beginning.
+        /// </summary>
+        public void Reset() => (_current, _index) = (Entity.Invalid, -1);
+    }
 
-                if (_binder.Contains(_current)) {
-                    return true;
-                }
+    /// <summary>
+    /// Enumerator for a View as a reference type.
+    /// </summary>
+    public ref struct ViewRefEnumerator<Binder, Binding> where Binder : IBinder<Binding> where Binding : struct {
+        private Entity _current;
+        private Binder _binder;
+        private int _index;
 
-                ++_index;
-            }
-        }
+        /// <returns>Current value of iterator.</returns>
+        public Binding Current => _binder.Bind(_current);
+
+        internal ViewRefEnumerator(Binder binder) => (_current, _binder, _index) = (Entity.Invalid, binder, -1);
+
+        /// <summary>
+        /// Advances the iterator.
+        /// </summary>
+        /// <returns>True if there is more data.</returns>
+        public bool MoveNext() => _binder.FindNext(ref _index, ref _current);
 
         /// <summary>
         /// Resets the iterator to the beginning.

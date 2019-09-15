@@ -65,8 +65,8 @@ namespace Simplecs.Views {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewEnumerator<Binder, Binding> GetEnumerator() => new ViewEnumerator<Binder, Binding>(_binder);
-        IEnumerator<Binding> IEnumerable<Binding>.GetEnumerator() => this.GetEnumerator();
+        public ViewRefEnumerator<Binder, Binding> GetEnumerator() => new ViewRefEnumerator<Binder, Binding>(_binder);
+        IEnumerator<Binding> IEnumerable<Binding>.GetEnumerator() => new ViewEnumerator<Binder, Binding>(_binder);
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
 }
