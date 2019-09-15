@@ -139,8 +139,13 @@ namespace Simplecs.Containers {
 
         public Entity EntityAt(int index) => _entities[index];
 
-        public ref T this[Entity entity] => ref _data[_mapping[EntityUtil.DecomposeIndex(entity)]];
-        public ref T this[int index] => ref _data[index];
+        public ref T GetComponentRef(Entity entity, int index) {
+            if (_entities[index] != entity) {
+                throw new InvalidOperationException(message:"Dereference on invalidated binding.");
+            }
+
+            return ref _data[index];
+        }
 
         public void Clear() {
             _data.Clear();

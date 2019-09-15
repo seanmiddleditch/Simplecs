@@ -53,12 +53,13 @@ namespace Simplecs.Views {
         private int _index;
 
         /// <value>Current entity key.</value>
-        public Entity Entity => _table.EntityAt(_index);
+        public Entity Entity { get; }
 
         /// <value>Current component data.</value>
-        public ref T Component => ref _table[_index];
+        public ref T Component => ref _table.GetComponentRef(Entity, _index);
 
         internal Binding(Entity entity, ComponentTable<T> table) {
+            Entity = entity;
             _table = table;
             _index = _table.IndexOf(entity);
         }
@@ -87,19 +88,18 @@ namespace Simplecs.Views {
         private int _index1, _index2;
 
         /// <value>Current entity key.</value>
-        public Entity Entity => _table1.EntityAt(_index1);
+        public Entity Entity { get; }
 
         /// <value>Current component data.</value>
-        public ref T1 Component1 => ref _table1[_index1];
+        public ref T1 Component1 => ref _table1.GetComponentRef(Entity, _index1);
 
         /// <value>Current component data.</value>
-        public ref T2 Component2 => ref _table2[_index2];
+        public ref T2 Component2 => ref _table2.GetComponentRef(Entity, _index2);
 
         internal Binding(Entity entity, ComponentTable<T1> table1, ComponentTable<T2> table2) {
-            _table1 = table1;
-            _table2 = table2;
-            _index1 = table1.IndexOf(entity);
-            _index2 = table2.IndexOf(entity);
+            Entity = entity;
+            (_table1, _table2) = (table1, table2);
+            (_index1, _index2) = (table1.IndexOf(entity), table2.IndexOf(entity));
         }
 
         /// <summary>
@@ -128,24 +128,21 @@ namespace Simplecs.Views {
         private int _index1, _index2, _index3;
 
         /// <value>Current entity key.</value>
-        public Entity Entity => _table1.EntityAt(_index1);
+        public Entity Entity { get; }
 
         /// <value>Current component data.</value>
-        public ref T1 Component1 => ref _table1[_index1];
+        public ref T1 Component1 => ref _table1.GetComponentRef(Entity, _index1);
 
         /// <value>Current component data.</value>
-        public ref T2 Component2 => ref _table2[_index2];
+        public ref T2 Component2 => ref _table2.GetComponentRef(Entity, _index2);
 
         /// <value>Current component data.</value>
-        public ref T3 Component3 => ref _table3[_index3];
+        public ref T3 Component3 => ref _table3.GetComponentRef(Entity, _index3);
 
         internal Binding(Entity entity, ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3) {
-            _table1 = table1;
-            _table2 = table2;
-            _table3 = table3;
-            _index1 = table1.IndexOf(entity);
-            _index2 = table2.IndexOf(entity);
-            _index3 = table3.IndexOf(entity);
+            Entity = entity;
+            (_table1, _table2, _table3) = (table1, table2, table3);
+            (_index1, _index2, _index3) = (table1.IndexOf(entity), table2.IndexOf(entity), table3.IndexOf(entity));
         }
 
         /// <summary>

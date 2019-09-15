@@ -130,11 +130,16 @@ namespace Simplecs {
         /// Illegal to call if the component does not exist.
         /// </summary>
         public ref T GetComponent<T>(Entity entity) where T : struct {
-            if (!_tables.TryGetValue(typeof(T), out IComponentTable? generic) || !(generic is ComponentTable<T> typed) || !typed.Contains(entity)) {
+            if (!_tables.TryGetValue(typeof(T), out IComponentTable? generic) || !(generic is ComponentTable<T> typed)) {
+                throw new InvalidOperationException(message: $"Unknown component type: {typeof(T).FullName}");
+            }
+
+            int index = typed.IndexOf(entity);
+            if (index == -1) {
                 throw new InvalidOperationException(message: "Entity does not have requested component");
             }
 
-            return ref typed[entity];
+            return ref typed.GetComponentRef(entity, index);
         }
 
         /// <summary>
