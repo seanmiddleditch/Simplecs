@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Simplecs;
+using Simplecs.Containers;
 
 namespace SimplecsTests {
     public class EntityAllocatorTest {

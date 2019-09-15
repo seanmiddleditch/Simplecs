@@ -11,6 +11,7 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 using System.Collections.Generic;
+using Simplecs.Containers;
 
 namespace Simplecs.Views {
     /// <summary>
@@ -49,16 +50,17 @@ namespace Simplecs.Views {
     /// </summary>
     public struct Binding<T> where T : struct {
         private ComponentTable<T> _table;
+        private int _index;
 
         /// <value>Current entity key.</value>
-        public Entity Entity { get; }
+        public Entity Entity => _table.EntityAt(_index);
 
         /// <value>Current component data.</value>
-        public ref T Component => ref _table[Entity];
+        public ref T Component => ref _table[_index];
 
         internal Binding(Entity entity, ComponentTable<T> table) {
-            Entity = entity;
             _table = table;
+            _index = _table.IndexOf(entity);
         }
 
         /// <summary>
@@ -69,7 +71,7 @@ namespace Simplecs.Views {
             internal ComponentTable<T> Table;
 
             internal Binder(ComponentTable<T> table, ViewPredicate predicate) => (Table, Predicate) = (table, predicate);
-            
+
             bool IBinder<Binding<T>>.Contains(Entity entity) => Predicate.IsAllowed(entity) && Table.Contains(entity);
             Binding<T> IBinder<Binding<T>>.Bind(Entity entity) => new Binding<T>(entity, Table);
             IReadOnlyList<Entity> IBinder<Binding<T>>.PotentialEntities => Table.Entities;
@@ -82,20 +84,22 @@ namespace Simplecs.Views {
     public struct Binding<T1, T2> where T1 : struct where T2 : struct {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
+        private int _index1, _index2;
 
         /// <value>Current entity key.</value>
-        public Entity Entity { get; }
+        public Entity Entity => _table1.EntityAt(_index1);
 
         /// <value>Current component data.</value>
-        public ref T1 Component1 => ref _table1[Entity];
+        public ref T1 Component1 => ref _table1[_index1];
 
         /// <value>Current component data.</value>
-        public ref T2 Component2 => ref _table2[Entity];
+        public ref T2 Component2 => ref _table2[_index2];
 
         internal Binding(Entity entity, ComponentTable<T1> table1, ComponentTable<T2> table2) {
-            Entity = entity;
             _table1 = table1;
             _table2 = table2;
+            _index1 = table1.IndexOf(entity);
+            _index2 = table2.IndexOf(entity);
         }
 
         /// <summary>
@@ -121,24 +125,27 @@ namespace Simplecs.Views {
         private ComponentTable<T1> _table1;
         private ComponentTable<T2> _table2;
         private ComponentTable<T3> _table3;
+        private int _index1, _index2, _index3;
 
         /// <value>Current entity key.</value>
-        public Entity Entity { get; }
+        public Entity Entity => _table1.EntityAt(_index1);
 
         /// <value>Current component data.</value>
-        public ref T1 Component1 => ref _table1[Entity];
+        public ref T1 Component1 => ref _table1[_index1];
 
         /// <value>Current component data.</value>
-        public ref T2 Component2 => ref _table2[Entity];
+        public ref T2 Component2 => ref _table2[_index2];
 
         /// <value>Current component data.</value>
-        public ref T3 Component3 => ref _table3[Entity];
+        public ref T3 Component3 => ref _table3[_index3];
 
         internal Binding(Entity entity, ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3) {
-            Entity = entity;
             _table1 = table1;
             _table2 = table2;
             _table3 = table3;
+            _index1 = table1.IndexOf(entity);
+            _index2 = table2.IndexOf(entity);
+            _index3 = table3.IndexOf(entity);
         }
 
         /// <summary>

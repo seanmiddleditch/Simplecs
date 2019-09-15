@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Simplecs;
+using Simplecs.Containers;
 using System.Linq;
 
 namespace SimplecsTests {
