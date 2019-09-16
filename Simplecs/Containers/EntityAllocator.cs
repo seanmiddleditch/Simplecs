@@ -23,7 +23,7 @@ namespace Simplecs.Containers {
         private readonly CircularBuffer<int> _freeIndices = new CircularBuffer<int>();
         private int _nextUnusedIndex = 0;
 
-        public const int FreeMinimum = 1000;
+        public const int FreeMinimum = 64;
         public const uint Invalid = 0;
 
         public Entity Allocate() {
