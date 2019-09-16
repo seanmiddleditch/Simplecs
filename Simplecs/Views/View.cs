@@ -79,7 +79,11 @@ namespace Simplecs.Views {
             return _predicate.IsAllowed(entity);
         }
 
-        ViewEnumerator<ViewRow<T1, T2>> IView<ViewRow<T1, T2>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2>>(this, Table1);
+        ViewEnumerator<ViewRow<T1, T2>> IView<ViewRow<T1, T2>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2>>(this, SmallestTable());
+        private IComponentTable SmallestTable() {
+            if (Table2.Count < Table1.Count) return Table2;
+            return Table1;
+        }
     }
 
     /// <summary>
@@ -109,6 +113,11 @@ namespace Simplecs.Views {
             return _predicate.IsAllowed(entity);
         }
 
-        ViewEnumerator<ViewRow<T1, T2, T3>> IView<ViewRow<T1, T2, T3>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2, T3>>(this, Table1);
+        ViewEnumerator<ViewRow<T1, T2, T3>> IView<ViewRow<T1, T2, T3>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2, T3>>(this, SmallestTable());
+        private IComponentTable SmallestTable() {
+            if (Table2.Count < Table1.Count && Table2.Count < Table3.Count) return Table2;
+            if (Table3.Count < Table1.Count && Table3.Count < Table2.Count) return Table3;
+            return Table1;
+        }
     }
 }
