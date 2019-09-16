@@ -21,7 +21,7 @@ namespace Simplecs.Views {
 
         public EntityEnumerator(IComponentTable table) => (_table, Entity, Index) = (table, Entity.Invalid, -1);
 
-        internal bool MoveNext<View>(View view) where View : IView {
+        internal bool MoveNext<RowT>(IView<RowT> view, out RowT row) where RowT : struct {
             // If the current entity has changed (e.g. been deleted from under us)
             // then don't initially increment the index. This allows Views to be used
             // to loop over entities and destroy them.
@@ -32,13 +32,14 @@ namespace Simplecs.Views {
 
             while (Index < _table.Count) {
                 Entity = _table.EntityAt(Index);
-                if (view.Contains(Entity)) {
+                if (view.TryBindRow(Entity, out row)) {
                     return true;
                 }
 
                 ++Index;
             }
 
+            row = default(RowT);
             return false;
         }
 

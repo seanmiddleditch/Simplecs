@@ -97,9 +97,9 @@ namespace SimplecsTests {
 
             var view = world.CreateView().Select<IntComponent, NameComponent>();
 
-            Assert.IsTrue(view.Contains(entity1));
-            Assert.IsTrue(view.Contains(entity2));
-            Assert.IsFalse(view.Contains(entity3));
+            Assert.IsTrue(view.Any(row => row.Entity == entity1));
+            Assert.IsTrue(view.Any(row => row.Entity == entity2));
+            Assert.IsFalse(view.Any(row => row.Entity == entity3));
 
             Assert.AreEqual(expected: 7, actual: view.Table1.TryGet(entity1, out var comp1) ? comp1.x : 0);
             Assert.AreEqual(expected: 90, actual: view.Table1.TryGet(entity2, out var comp2) ? comp2.x : 0);
