@@ -18,7 +18,6 @@ namespace Simplecs.Containers {
     internal interface IComponentTable {
         Type Type { get; }
         int Count { get; }
-        IReadOnlyList<Entity> Entities { get; }
 
         bool Contains(Entity entity);
         bool Remove(Entity entity);
@@ -34,17 +33,14 @@ namespace Simplecs.Containers {
     /// </summary>
     /// <typeparam name="T">Struct type containing component data.</typeparam>
     internal class ComponentTable<T> : IComponentTable where T : struct {
-        private ChunkedStorage<T> _data = new ChunkedStorage<T>();
-        private List<Entity> _entities = new List<Entity>();
-        private List<int> _mapping = new List<int>();
+        private readonly ChunkedStorage<T> _data = new ChunkedStorage<T>();
+        private readonly List<Entity> _entities = new List<Entity>();
+        private readonly List<int> _mapping = new List<int>();
 
         public delegate void Callback(Entity entity, ref T component);
 
         public Type Type => typeof(T);
         public int Count => _entities.Count;
-
-        public IReadOnlyList<Entity> Entities => _entities;
-        public ChunkedStorage<T> Components => _data;
 
         public bool Contains(Entity entity) => IndexOf(entity) != -1;
         
@@ -139,9 +135,7 @@ namespace Simplecs.Containers {
 
         public Entity EntityAt(int index) => _entities[index];
 
-        public Entity CheckedEntityAt(int index) => index >= 0 && index < _entities.Count ? _entities[index] : Entity.Invalid;
-
-        public ref T GetComponentRef(Entity entity, int index) {
+        public ref T ReferenceAt(Entity entity, int index) {
             if (_entities[index] != entity) {
                 throw new InvalidOperationException(message:"Dereference on invalidated binding.");
             }

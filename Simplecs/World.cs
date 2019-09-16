@@ -20,8 +20,8 @@ namespace Simplecs {
     /// Contains a collection of entities and associated components.
     /// </summary>
     public sealed class World {
-        private EntityAllocator _entities = new EntityAllocator();
-        private Dictionary<Type, IComponentTable> _tables = new Dictionary<Type, IComponentTable>();
+        private readonly EntityAllocator _entities = new EntityAllocator();
+        private readonly Dictionary<Type, IComponentTable> _tables = new Dictionary<Type, IComponentTable>();
 
         /// <summary>
         /// Creates a new entity.
@@ -139,7 +139,7 @@ namespace Simplecs {
                 throw new InvalidOperationException(message: "Entity does not have requested component");
             }
 
-            return ref typed.GetComponentRef(entity, index);
+            return ref typed.ReferenceAt(entity, index);
         }
 
         /// <summary>

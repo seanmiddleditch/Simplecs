@@ -13,70 +13,28 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Simplecs.Containers;
 
 namespace Simplecs.Views {
     /// <summary>
-    /// Enumerator for a View.
+    /// Enumerator for rows in a view.
     /// </summary>
-    /// <note>
-    /// The Enumerator is invalidated if the underlying component tables are modified.
-    /// 
-    /// We currently do not protected against nor detect this situation.
-    /// </note>
-    /// <typeparam name="Binder">View being enumerated.</typeparam>
-    /// <typeparam name="Binding">Type of iteration.</typeparam>
-    public struct ViewEnumerator<Binder, Binding> : IEnumerator<Binding> where Binder : IBinder<Binding> where Binding : struct {
-        private Entity _current;
-        private Binder _binder;
-        private int _index;
+    public struct ViewEnumerator<RowT> : IEnumerator<RowT> where RowT : struct {
+        private readonly IView<RowT> _view;
+        private EntityEnumerator _entities;
+        private RowT _row;
 
-        /// <returns>Current value of iterator.</returns>
-        public Binding Current => _binder.Bind(_current);
+        internal ViewEnumerator(IView<RowT> view, IComponentTable table) => (_view, _entities, _row) = (view, new EntityEnumerator(table), default(RowT));
 
-        Binding IEnumerator<Binding>.Current => Current;
+        /// <summary>Current row.</summary>
+        public RowT Current => _row;
         object? IEnumerator.Current => throw new NotImplementedException();
 
-        internal ViewEnumerator(Binder binder) => (_current, _binder, _index) = (Entity.Invalid, binder, -1);
-
-        /// <summary>
-        /// Dispose of iterator.
-        /// </summary>
-        public void Dispose() {}
-
-        /// <summary>
-        /// Advances the iterator.
-        /// </summary>
-        /// <returns>True if there is more data.</returns>
-        public bool MoveNext() => _binder.FindNext(ref _index, ref _current);
-
-        /// <summary>
-        /// Resets the iterator to the beginning.
-        /// </summary>
-        public void Reset() => (_current, _index) = (Entity.Invalid, -1);
-    }
-
-    /// <summary>
-    /// Enumerator for a View as a reference type.
-    /// </summary>
-    public ref struct ViewRefEnumerator<Binder, Binding> where Binder : IBinder<Binding> where Binding : struct {
-        private Entity _current;
-        private Binder _binder;
-        private int _index;
-
-        /// <returns>Current value of iterator.</returns>
-        public Binding Current => _binder.Bind(_current);
-
-        internal ViewRefEnumerator(Binder binder) => (_current, _binder, _index) = (Entity.Invalid, binder, -1);
-
-        /// <summary>
-        /// Advances the iterator.
-        /// </summary>
-        /// <returns>True if there is more data.</returns>
-        public bool MoveNext() => _binder.FindNext(ref _index, ref _current);
-
-        /// <summary>
-        /// Resets the iterator to the beginning.
-        /// </summary>
-        public void Reset() => (_current, _index) = (Entity.Invalid, -1);
+        /// <summary>Attempt to increment enumerator.</summary>
+        public bool MoveNext() => _entities.MoveNext(_view, out _row);
+        /// <summary>Reset enumerator to initial state.</summary>
+        public void Reset() => _entities.Reset();
+        /// <summary>Dispose of the enumerator.</summary>
+        public void Dispose() { }
     }
 }
