@@ -16,6 +16,10 @@ using System.Collections.Generic;
 using Simplecs.Containers;
 
 namespace Simplecs.Views {
+    internal static class ViewUtility {
+        internal static IComponentTable SmallestTable(IComponentTable table, IComponentTable? extraTable) => extraTable != null && extraTable.Count < table.Count ? extraTable : table;
+    }
+
     /// <summary>
     /// A collection of entities that match a particular signature.
     /// </summary>
@@ -53,7 +57,7 @@ namespace Simplecs.Views {
             return _predicate.IsAllowed(entity);
         }
 
-        ViewEnumerator<ViewRow<T>> IView<ViewRow<T>>.GetEnumerator() => new ViewEnumerator<ViewRow<T>>(this, Table);
+        ViewEnumerator<ViewRow<T>> IView<ViewRow<T>>.GetEnumerator() => new ViewEnumerator<ViewRow<T>>(this, ViewUtility.SmallestTable(Table, _predicate.SmallestTable()));
     }
 
     /// <summary>
@@ -79,7 +83,7 @@ namespace Simplecs.Views {
             return _predicate.IsAllowed(entity);
         }
 
-        ViewEnumerator<ViewRow<T1, T2>> IView<ViewRow<T1, T2>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2>>(this, SmallestTable());
+        ViewEnumerator<ViewRow<T1, T2>> IView<ViewRow<T1, T2>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2>>(this, ViewUtility.SmallestTable(SmallestTable(), _predicate.SmallestTable()));
         private IComponentTable SmallestTable() {
             if (Table2.Count < Table1.Count) return Table2;
             return Table1;
@@ -113,7 +117,7 @@ namespace Simplecs.Views {
             return _predicate.IsAllowed(entity);
         }
 
-        ViewEnumerator<ViewRow<T1, T2, T3>> IView<ViewRow<T1, T2, T3>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2, T3>>(this, SmallestTable());
+        ViewEnumerator<ViewRow<T1, T2, T3>> IView<ViewRow<T1, T2, T3>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2, T3>>(this, ViewUtility.SmallestTable(SmallestTable(), _predicate.SmallestTable()));
         private IComponentTable SmallestTable() {
             if (Table2.Count < Table1.Count && Table2.Count < Table3.Count) return Table2;
             if (Table3.Count < Table1.Count && Table3.Count < Table2.Count) return Table3;

@@ -46,5 +46,24 @@ namespace Simplecs.Views {
             //
             return true;
         }
+
+        internal IComponentTable? SmallestTable() {
+            IComponentTable? bestTable = null;
+            int bestCount = int.MaxValue;
+
+            if (_tables == null) {
+                return null;
+            }
+
+            // Find the smallest _required component_ table
+            //
+            for (int index = _excludedCount; index != _tables.Length; ++index) {
+                if (_tables[index].Count < bestCount) {
+                    bestTable = _tables[index];
+                }
+            }
+
+            return bestTable;
+        }
     }
 }
