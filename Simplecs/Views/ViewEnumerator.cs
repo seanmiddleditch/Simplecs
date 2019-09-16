@@ -73,7 +73,7 @@ namespace Simplecs.Views {
         internal ViewEnumerator(View<T1, T2, T3> view, IComponentTable table) => (_view, _entities) = (view, new EntityEnumerator(table));
 
         /// <summary>Current row.</summary>
-        public ViewRow<T1, T2, T3> Current => new ViewRow<T1, T2, T3>(_view, _entities.Entity, _entities.Index);
+        public ViewRow<T1, T2, T3> Current => new ViewRow<T1, T2, T3>(_view, _entities.Entity);
         object? IEnumerator.Current => throw new NotImplementedException();
 
         /// <summary>Attempt to increment enumerator.</summary>

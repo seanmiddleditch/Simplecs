@@ -38,6 +38,8 @@ namespace Simplecs.Views {
 
         internal View(ComponentTable<T> table, ViewPredicate predicate) => (_predicate, Table) = (predicate, table);
 
+        internal ViewRow<T> BindRow(Entity entity) => new ViewRow<T>(this, entity);
+
         /// <summary>
         /// Checks if the View contains a given entity.
         /// </summary>
@@ -69,6 +71,8 @@ namespace Simplecs.Views {
         internal readonly ComponentTable<T2> Table2;
 
         internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_predicate, Table1, Table2) = (predicate, table1, table2);
+
+        internal ViewRow<T1, T2> BindRow(Entity entity) => new ViewRow<T1, T2>(this, entity);
 
         /// <summary>
         /// Checks if the View contains a given entity.
@@ -103,6 +107,8 @@ namespace Simplecs.Views {
         internal readonly ComponentTable<T3> Table3;
 
         internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_predicate, Table1, Table2, Table3) = (predicate, table1, table2, table3);
+
+        internal ViewRow<T1, T2, T3> BindRow(Entity entity) => new ViewRow<T1, T2, T3>(this, entity);
 
         /// <summary>
         /// Checks if the View contains a given entity.

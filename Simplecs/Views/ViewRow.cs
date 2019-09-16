@@ -23,7 +23,7 @@ namespace Simplecs.Views {
         /// <summary>Component of current row.</summary>
         public ref T Component => ref _view.Table.ReferenceAt(Entity, _index);
 
-        internal ViewRow(View<T> view, Entity entity, int index) => (_view, Entity, _index) = (view, entity, index);
+        internal ViewRow(View<T> view, Entity entity) => (_view, Entity, _index) = (view, entity, view.Table.IndexOf(entity));
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ namespace Simplecs.Views {
         /// <summary>Second component of current row.</summary>
         public ref T2 Component2 => ref _view.Table2.ReferenceAt(Entity, _index2);
 
-        internal ViewRow(View<T1, T2> view, Entity entity, int index) => (_view, Entity, _index1, _index2) = (view, entity, index, view.Table2.IndexOf(entity));
+        internal ViewRow(View<T1, T2> view, Entity entity) => (_view, Entity, _index1, _index2) = (view, entity, view.Table1.IndexOf(entity), view.Table2.IndexOf(entity));
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ namespace Simplecs.Views {
         /// <summary>Third component of current row.</summary>
         public ref T3 Component3 => ref _view.Table3.ReferenceAt(Entity, _index3);
 
-        internal ViewRow(View<T1, T2, T3> view, Entity entity, int index) => (_view, Entity, _index1, _index2, _index3) = (view, entity, index, view.Table2.IndexOf(entity), view.Table3.IndexOf(entity));
+        internal ViewRow(View<T1, T2, T3> view, Entity entity) => (_view, Entity, _index1, _index2, _index3) = (view, entity, view.Table1.IndexOf(entity), view.Table2.IndexOf(entity), view.Table3.IndexOf(entity));
 
     }
 }
