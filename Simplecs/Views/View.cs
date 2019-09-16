@@ -28,6 +28,9 @@ namespace Simplecs.Views {
         bool Contains(Entity entity);
     }
 
+    /// <summary>
+    /// View over entities matching a specific signature.
+    /// </summary>
     public sealed class View<T> : IView, IEnumerable<ViewRow<T>> where T : struct {
         private readonly ViewPredicate _predicate;
 
@@ -54,6 +57,9 @@ namespace Simplecs.Views {
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// View over entities matching a specific signature.
+    /// </summary>
     public sealed class View<T1, T2> : IView, IEnumerable<ViewRow<T1, T2>>
         where T1 : struct
         where T2 : struct {
@@ -83,6 +89,9 @@ namespace Simplecs.Views {
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// View over entities matching a specific signature.
+    /// </summary>
     public sealed class View<T1, T2, T3> : IView, IEnumerable<ViewRow<T1, T2, T3>>
         where T1 : struct
         where T2 : struct
