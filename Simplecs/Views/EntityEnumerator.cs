@@ -15,34 +15,33 @@ using Simplecs.Containers;
 namespace Simplecs.Views {
     internal struct EntityEnumerator {
         private readonly IComponentTable _table;
-        private Entity _entity;
-        private int _index;
 
-        public RowKey Current => new RowKey(_entity, _index);
+        public Entity Entity { get; private set; }
+        public int Index { get; private set; }
 
-        public EntityEnumerator(IComponentTable table) => (_table, _entity, _index) = (table, Entity.Invalid, -1);
+        public EntityEnumerator(IComponentTable table) => (_table, Entity, Index) = (table, Entity.Invalid, -1);
 
         internal bool MoveNext<View>(View view) where View : IView {
             // If the current entity has changed (e.g. been deleted from under us)
             // then don't initially increment the index. This allows Views to be used
             // to loop over entities and destroy them.
             //
-            if (_index == -1 || (_index < _table.Count && _entity == _table.EntityAt(_index))) {
-                ++_index;
+            if (Index == -1 || (Index < _table.Count && Entity == _table.EntityAt(Index))) {
+                ++Index;
             }
 
-            while (_index < _table.Count) {
-                _entity = _table.EntityAt(_index);
-                if (view.Contains(_entity)) {
+            while (Index < _table.Count) {
+                Entity = _table.EntityAt(Index);
+                if (view.Contains(Entity)) {
                     return true;
                 }
 
-                ++_index;
+                ++Index;
             }
 
             return false;
         }
 
-        internal void Reset() => (_entity, _index) = (Entity.Invalid, -1);
+        internal void Reset() => (Entity, Index) = (Entity.Invalid, -1);
     }
 }

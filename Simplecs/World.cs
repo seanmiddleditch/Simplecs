@@ -139,7 +139,7 @@ namespace Simplecs {
                 throw new InvalidOperationException(message: "Entity does not have requested component");
             }
 
-            return ref typed.ReferenceAt(new RowKey(entity, index));
+            return ref typed.ReferenceAt(entity, index);
         }
 
         /// <summary>

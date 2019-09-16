@@ -16,14 +16,14 @@ namespace Simplecs.Views {
     /// </summary>
     public readonly struct ViewRow<T> where T : struct {
         private readonly View<T> _view;
-        private readonly RowKey _key;
+        private readonly int _index;
 
         /// <summary>Entity of current row.</summary>
-        public Entity Entity => _key.Entity;
+        public Entity Entity { get; }
         /// <summary>Component of current row.</summary>
-        public ref T Component => ref _view.Table.ReferenceAt(_key);
+        public ref T Component => ref _view.Table.ReferenceAt(Entity, _index);
 
-        internal ViewRow(View<T> view, RowKey key) => (_view, _key) = (view, key);
+        internal ViewRow(View<T> view, Entity entity, int index) => (_view, Entity, _index) = (view, entity, index);
     }
 
     /// <summary>
@@ -33,17 +33,16 @@ namespace Simplecs.Views {
         where T1 : struct
         where T2 : struct {
         private readonly View<T1, T2> _view;
-        private readonly RowKey _key;
-        private readonly int _index2;
+        private readonly int _index1, _index2;
 
         /// <summary>Entity of current row.</summary>
-        public Entity Entity => _key.Entity;
+        public Entity Entity { get; }
         /// <summary>First component of current row.</summary>
-        public ref T1 Component1 => ref _view.Table1.ReferenceAt(_key);
+        public ref T1 Component1 => ref _view.Table1.ReferenceAt(Entity, _index1);
         /// <summary>Second component of current row.</summary>
-        public ref T2 Component2 => ref _view.Table2.ReferenceAt(new RowKey(Entity, _index2));
+        public ref T2 Component2 => ref _view.Table2.ReferenceAt(Entity, _index2);
 
-        internal ViewRow(View<T1, T2> view, RowKey key) => (_view, _key, _index2) = (view, key, view.Table2.IndexOf(key.Entity));
+        internal ViewRow(View<T1, T2> view, Entity entity, int index) => (_view, Entity, _index1, _index2) = (view, entity, index, view.Table2.IndexOf(entity));
     }
 
     /// <summary>
@@ -54,19 +53,18 @@ namespace Simplecs.Views {
         where T2 : struct
         where T3 : struct {
         private readonly View<T1, T2, T3> _view;
-        private readonly RowKey _key;
-        private readonly int _index2, _index3;
+        private readonly int _index1, _index2, _index3;
 
         /// <summary>Entity of current row.</summary>
-        public Entity Entity => _key.Entity;
+        public Entity Entity { get; }
         /// <summary>First component of current row.</summary>
-        public ref T1 Component1 => ref _view.Table1.ReferenceAt(_key);
+        public ref T1 Component1 => ref _view.Table1.ReferenceAt(Entity, _index1);
         /// <summary>Second component of current row.</summary>
-        public ref T2 Component2 => ref _view.Table2.ReferenceAt(new RowKey(Entity, _index2));
+        public ref T2 Component2 => ref _view.Table2.ReferenceAt(Entity, _index2);
         /// <summary>Third component of current row.</summary>
-        public ref T3 Component3 => ref _view.Table3.ReferenceAt(new RowKey(Entity, _index3));
+        public ref T3 Component3 => ref _view.Table3.ReferenceAt(Entity, _index3);
 
-        internal ViewRow(View<T1, T2, T3> view, RowKey key) => (_view, _key, _index2, _index3) = (view, key, view.Table2.IndexOf(key.Entity), view.Table3.IndexOf(key.Entity));
+        internal ViewRow(View<T1, T2, T3> view, Entity entity, int index) => (_view, Entity, _index1, _index2, _index3) = (view, entity, index, view.Table2.IndexOf(entity), view.Table3.IndexOf(entity));
 
     }
 }

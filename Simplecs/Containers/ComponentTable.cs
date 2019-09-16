@@ -135,12 +135,12 @@ namespace Simplecs.Containers {
 
         public Entity EntityAt(int index) => _entities[index];
 
-        public ref T ReferenceAt(RowKey key) {
-            if (_entities[key.Index] != key.Entity) {
+        public ref T ReferenceAt(Entity entity, int index) {
+            if (_entities[index] != entity) {
                 throw new InvalidOperationException(message:"Dereference on invalidated binding.");
             }
 
-            return ref _data[key.Index];
+            return ref _data[index];
         }
 
         public void Clear() {
