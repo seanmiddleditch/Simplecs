@@ -33,7 +33,7 @@ namespace Simplecs.Views {
     public struct ViewEnumerator<T1, T2> : IEnumerator<ViewRow<T1, T2>>
         where T1 : struct
         where T2 : struct {
-        private View<T1, T2> _view;
+        private readonly View<T1, T2> _view;
         private EntityEnumerator _entities;
 
         internal ViewEnumerator(View<T1, T2> view, IComponentTable table) => (_view, _entities) = (view, new EntityEnumerator(table));
@@ -50,7 +50,7 @@ namespace Simplecs.Views {
         where T1 : struct
         where T2 : struct
         where T3 : struct {
-        private View<T1, T2, T3> _view;
+        private readonly View<T1, T2, T3> _view;
         private EntityEnumerator _entities;
 
         internal ViewEnumerator(View<T1, T2, T3> view, IComponentTable table) => (_view, _entities) = (view, new EntityEnumerator(table));
