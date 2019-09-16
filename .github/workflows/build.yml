@@ -20,13 +20,11 @@ jobs:
         name: Build
       - run: dotnet test -c ${{ matrix.config }}
         name: Test
-      - run: dotnet pack -c ${{ matrix.config }} --include-symbols --version-suffix ci-${{ github.sha }}
+      - run: dotnet pack -c ${{ matrix.config }} --include-symbols --version-suffix ci-${{ matrix.config }}-${{ github.sha }}
         name: Package
-        if: matrix.config == 'Release'
       - uses: actions/upload-artifact@master
         with:
-          name: packages
+          name: ci-packages
           path: pkg/Simplecs
         name: Artifacts
-        if: matrix.config == 'Release'
 
