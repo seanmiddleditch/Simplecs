@@ -17,7 +17,7 @@
   <!-- Packaging configuration -->
   <PropertyGroup>
     <PackageId>Simplecs</PackageId>
-    <Version>0.0.1</Version>
+    <Version>0.1.0</Version>
     <Authors>Sean Middleditch</Authors>
     <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/seanmiddleditch/Simplecs</RepositoryUrl>
