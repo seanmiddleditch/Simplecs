@@ -12,7 +12,7 @@ sophisticated games or users should probably look elsewhere for a suitable libra
 The intended use cases are small demos, toys, and examples.
 
 This library uses a naive approach based on sparse sets to implement O(1) component
-lookup and very cache-friendly iteration of component structures. The cost is a
+lookup and _sometimes_ cache-friendly iteration of component structures. The cost is a
 some more memory lookup overhead than would be purely desired. Further, iterating sets
 of components requires many of these lookup operations, as compared to iterating a
 single component which is very cache-friendly in this architecture.
