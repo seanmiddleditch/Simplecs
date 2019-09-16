@@ -29,19 +29,18 @@ namespace Simplecs.Views {
     }
 
     public sealed class View<T> : IView, IEnumerable<ViewRow<T>> where T : struct {
-        private ComponentTable<T> _table;
-        private ViewPredicate _predicate;
+        private readonly ViewPredicate _predicate;
 
-        internal View(ComponentTable<T> table, ViewPredicate predicate) => (_table, _predicate) = (table, predicate);
+        internal readonly ComponentTable<T> Table;
 
-        internal ComponentMapper<T> Component => new ComponentMapper<T>(_table);
+        internal View(ComponentTable<T> table, ViewPredicate predicate) => (_predicate, Table) = (predicate, table);
 
         /// <summary>
         /// Checks if the View contains a given entity.
         /// </summary>
         /// <param name="entity">Entity to check.</param>
         /// <returns>True if the entity is contained in the view.</returns>
-        public bool Contains(Entity entity) => _table.Contains(entity) && _predicate.IsAllowed(entity);
+        public bool Contains(Entity entity) => Table.Contains(entity) && _predicate.IsAllowed(entity);
 
         /// <summary>
         /// Enumerator for matched entities and components.
@@ -50,7 +49,7 @@ namespace Simplecs.Views {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewEnumerator<T> GetEnumerator() => new ViewEnumerator<T>(this, _table);
+        public ViewEnumerator<T> GetEnumerator() => new ViewEnumerator<T>(this, Table);
         IEnumerator<ViewRow<T>> IEnumerable<ViewRow<T>>.GetEnumerator() => GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
@@ -58,21 +57,19 @@ namespace Simplecs.Views {
     public sealed class View<T1, T2> : IView, IEnumerable<ViewRow<T1, T2>>
         where T1 : struct
         where T2 : struct {
-        private ComponentTable<T1> _table1;
-        private ComponentTable<T2> _table2;
-        private ViewPredicate _predicate;
+        private readonly ViewPredicate _predicate;
 
-        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_table1, _table2, _predicate) = (table1, table2, predicate);
+        internal readonly ComponentTable<T1> Table1;
+        internal readonly ComponentTable<T2> Table2;
 
-        internal ComponentMapper<T1> Component1 => new ComponentMapper<T1>(_table1);
-        internal ComponentMapper<T2> Component2 => new ComponentMapper<T2>(_table2);
+        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_predicate, Table1, Table2) = (predicate, table1, table2);
 
         /// <summary>
         /// Checks if the View contains a given entity.
         /// </summary>
         /// <param name="entity">Entity to check.</param>
         /// <returns>True if the entity is contained in the view.</returns>
-        public bool Contains(Entity entity) => _table1.Contains(entity) && _table2.Contains(entity) && _predicate.IsAllowed(entity);
+        public bool Contains(Entity entity) => Table1.Contains(entity) && Table2.Contains(entity) && _predicate.IsAllowed(entity);
 
         /// <summary>
         /// Enumerator for matched entities and components.
@@ -81,7 +78,7 @@ namespace Simplecs.Views {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewEnumerator<T1, T2> GetEnumerator() => new ViewEnumerator<T1, T2>(this, _table1);
+        public ViewEnumerator<T1, T2> GetEnumerator() => new ViewEnumerator<T1, T2>(this, Table1);
         IEnumerator<ViewRow<T1, T2>> IEnumerable<ViewRow<T1, T2>>.GetEnumerator() => GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
@@ -90,23 +87,20 @@ namespace Simplecs.Views {
         where T1 : struct
         where T2 : struct
         where T3 : struct {
-        private ComponentTable<T1> _table1;
-        private ComponentTable<T2> _table2;
-        private ComponentTable<T3> _table3;
-        private ViewPredicate _predicate;
+        private readonly ViewPredicate _predicate;
 
-        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_table1, _table2, _table3, _predicate) = (table1, table2, table3, predicate);
+        internal readonly ComponentTable<T1> Table1;
+        internal readonly ComponentTable<T2> Table2;
+        internal readonly ComponentTable<T3> Table3;
 
-        internal ComponentMapper<T1> Component1 => new ComponentMapper<T1>(_table1);
-        internal ComponentMapper<T2> Component2 => new ComponentMapper<T2>(_table2);
-        internal ComponentMapper<T3> Component3 => new ComponentMapper<T3>(_table3);
+        internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_predicate, Table1, Table2, Table3) = (predicate, table1, table2, table3);
 
         /// <summary>
         /// Checks if the View contains a given entity.
         /// </summary>
         /// <param name="entity">Entity to check.</param>
         /// <returns>True if the entity is contained in the view.</returns>
-        public bool Contains(Entity entity) => _table1.Contains(entity) && _table2.Contains(entity) && _table3.Contains(entity) && _predicate.IsAllowed(entity);
+        public bool Contains(Entity entity) => Table1.Contains(entity) && Table2.Contains(entity) && Table3.Contains(entity) && _predicate.IsAllowed(entity);
 
         /// <summary>
         /// Enumerator for matched entities and components.
@@ -115,7 +109,7 @@ namespace Simplecs.Views {
         /// should not be modified.
         /// </summary>
         /// <returns>Entity and component enumerator.</returns>
-        public ViewEnumerator<T1, T2, T3> GetEnumerator() => new ViewEnumerator<T1, T2, T3>(this, _table1);
+        public ViewEnumerator<T1, T2, T3> GetEnumerator() => new ViewEnumerator<T1, T2, T3>(this, Table1);
         IEnumerator<ViewRow<T1, T2, T3>> IEnumerable<ViewRow<T1, T2, T3>>.GetEnumerator() => GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }

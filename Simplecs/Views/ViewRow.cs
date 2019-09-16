@@ -16,7 +16,7 @@ namespace Simplecs.Views {
         private readonly RowKey _key;
 
         public Entity Entity => _key.Entity;
-        public ref T Component => ref _view.Component[_key];
+        public ref T Component => ref _view.Table.ReferenceAt(_key);
 
         internal ViewRow(View<T> view, RowKey key) => (_view, _key) = (view, key);
     }
@@ -29,10 +29,10 @@ namespace Simplecs.Views {
         private readonly int _index2;
 
         public Entity Entity => _key.Entity;
-        public ref T1 Component1 => ref _view.Component1[_key];
-        public ref T2 Component2 => ref _view.Component2[new RowKey(Entity, _index2)];
+        public ref T1 Component1 => ref _view.Table1.ReferenceAt(_key);
+        public ref T2 Component2 => ref _view.Table2.ReferenceAt(new RowKey(Entity, _index2));
 
-        internal ViewRow(View<T1, T2> view, RowKey key) => (_view, _key, _index2) = (view, key, view.Component2.IndexOf(key.Entity));
+        internal ViewRow(View<T1, T2> view, RowKey key) => (_view, _key, _index2) = (view, key, view.Table2.IndexOf(key.Entity));
     }
 
     public readonly struct ViewRow<T1, T2, T3>
@@ -44,11 +44,11 @@ namespace Simplecs.Views {
         private readonly int _index2, _index3;
 
         public Entity Entity => _key.Entity;
-        public ref T1 Component1 => ref _view.Component1[_key];
-        public ref T2 Component2 => ref _view.Component2[new RowKey(Entity, _index2)];
-        public ref T3 Component3 => ref _view.Component3[new RowKey(Entity, _index3)];
+        public ref T1 Component1 => ref _view.Table1.ReferenceAt(_key);
+        public ref T2 Component2 => ref _view.Table2.ReferenceAt(new RowKey(Entity, _index2));
+        public ref T3 Component3 => ref _view.Table3.ReferenceAt(new RowKey(Entity, _index3));
 
-        internal ViewRow(View<T1, T2, T3> view, RowKey key) => (_view, _key, _index2, _index3) = (view, key, view.Component2.IndexOf(key.Entity), view.Component3.IndexOf(key.Entity));
+        internal ViewRow(View<T1, T2, T3> view, RowKey key) => (_view, _key, _index2, _index3) = (view, key, view.Table2.IndexOf(key.Entity), view.Table3.IndexOf(key.Entity));
 
     }
 }
