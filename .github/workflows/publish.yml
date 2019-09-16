@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-16.04
+        
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.0.100-preview9-014004
+      - run: dotnet build -c Release
+        name: Build
+      - run: dotnet test -c Release
+        name: Test
+      - run: dotnet pack -c Release --include-symbols --include-source
+        name: Package
+      - uses: actions/upload-artifact@master
+        with:
+          name: packages
+          path: pkg/Simplecs
+        name: Artifacts
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          body_path: ReleaseNotes.md
+          files: pkg/Simplecs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: dotnet nuget push .\pkg\Simplecs\Simplecs.*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_KEY }}
+        name: Publish to NuGet
+
