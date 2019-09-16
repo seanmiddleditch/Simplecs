@@ -27,6 +27,6 @@ jobs:
         with:
           name: packages
           path: pkg/Simplecs
-        name: Publish Nupkg
+        name: Artifacts
         if: matrix.config == 'Release'
 
