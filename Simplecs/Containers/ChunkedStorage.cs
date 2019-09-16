@@ -25,8 +25,8 @@ namespace Simplecs.Containers {
     /// </summary>
     /// <typeparam name="T">Type stored.</typeparam>
     public class ChunkedStorage<T> where T : struct {
-        private List<T[]> _chunks = new List<T[]>();
-        private int _chunkElementCount = 1024;
+        private readonly List<T[]> _chunks = new List<T[]>();
+        private readonly int _chunkElementCount = 1024;
         private int _count = 0;
 
         /// <summary>

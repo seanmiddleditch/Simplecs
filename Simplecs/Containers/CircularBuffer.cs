@@ -19,7 +19,7 @@ namespace Simplecs.Containers {
     /// Simple circule buffer implementation.
     /// </summary>
     public class CircularBuffer<T> {
-        private List<T> _data = new List<T>();
+        private readonly List<T> _data = new List<T>();
         private int _head = 0;
         private int _count = 0;
 

@@ -19,8 +19,8 @@ namespace Simplecs.Containers {
     /// Allocates and maintains a unique set of entity keys.
     /// </summary>
     internal class EntityAllocator {
-        private List<byte> _generations = new List<byte>();
-        private CircularBuffer<int> _freeIndices = new CircularBuffer<int>();
+        private readonly List<byte> _generations = new List<byte>();
+        private readonly CircularBuffer<int> _freeIndices = new CircularBuffer<int>();
         private int _nextUnusedIndex = 0;
 
         public const int FreeMinimum = 1000;

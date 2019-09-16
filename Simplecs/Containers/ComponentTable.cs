@@ -33,9 +33,9 @@ namespace Simplecs.Containers {
     /// </summary>
     /// <typeparam name="T">Struct type containing component data.</typeparam>
     internal class ComponentTable<T> : IComponentTable where T : struct {
-        private ChunkedStorage<T> _data = new ChunkedStorage<T>();
-        private List<Entity> _entities = new List<Entity>();
-        private List<int> _mapping = new List<int>();
+        private readonly ChunkedStorage<T> _data = new ChunkedStorage<T>();
+        private readonly List<Entity> _entities = new List<Entity>();
+        private readonly List<int> _mapping = new List<int>();
 
         public delegate void Callback(Entity entity, ref T component);
 
