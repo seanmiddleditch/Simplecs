@@ -24,7 +24,7 @@ namespace Simplecs {
     /// The Select method creates the View.
     /// </summary>
     public class ViewBuilder {
-        private World _world;
+        private readonly World _world;
         private List<IComponentTable>? _required;
         private List<IComponentTable>? _excluded;
 

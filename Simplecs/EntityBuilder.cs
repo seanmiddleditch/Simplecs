@@ -14,9 +14,9 @@ namespace Simplecs {
     /// <summary>
     /// Assists in creating new entities.
     /// </summary>
-    public struct EntityBuilder {
-        World _world;
-        Entity _entity;
+    public readonly struct EntityBuilder {
+        private readonly World _world;
+        private readonly Entity _entity;
 
         /// <summary>
         /// Retrieves the created entity.
