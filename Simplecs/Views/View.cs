@@ -46,9 +46,11 @@ namespace Simplecs.Views {
         internal View(ComponentTable<T> table, ViewPredicate predicate) => (_predicate, Table) = (predicate, table);
 
         bool IView<ViewRow<T>>.TryBindRow(Entity entity, out ViewRow<T> row) {
+            row = default(ViewRow<T>);
             int index = Table.IndexOf(entity);
-            row = new ViewRow<T>(this, entity);
-            return index != -1 && _predicate.IsAllowed(entity);
+            if (index == -1) return false;
+            row = new ViewRow<T>(this, entity, index);
+            return _predicate.IsAllowed(entity);
         }
 
         ViewEnumerator<ViewRow<T>> IView<ViewRow<T>>.GetEnumerator() => new ViewEnumerator<ViewRow<T>>(this, Table);
@@ -68,10 +70,13 @@ namespace Simplecs.Views {
         internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ViewPredicate predicate) => (_predicate, Table1, Table2) = (predicate, table1, table2);
 
         bool IView<ViewRow<T1, T2>>.TryBindRow(Entity entity, out ViewRow<T1, T2> row) {
+            row = default(ViewRow<T1, T2>);
             int index1 = Table1.IndexOf(entity);
+            if (index1 == -1) return false;
             int index2 = Table2.IndexOf(entity);
-            row = new ViewRow<T1, T2>(this, entity);
-            return index1 != -1 && index2 != -1 && _predicate.IsAllowed(entity);
+            if (index2 == -1) return false;
+            row = new ViewRow<T1, T2>(this, entity, index1, index2);
+            return _predicate.IsAllowed(entity);
         }
 
         ViewEnumerator<ViewRow<T1, T2>> IView<ViewRow<T1, T2>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2>>(this, Table1);
@@ -93,11 +98,15 @@ namespace Simplecs.Views {
         internal View(ComponentTable<T1> table1, ComponentTable<T2> table2, ComponentTable<T3> table3, ViewPredicate predicate) => (_predicate, Table1, Table2, Table3) = (predicate, table1, table2, table3);
 
         bool IView<ViewRow<T1, T2, T3>>.TryBindRow(Entity entity, out ViewRow<T1, T2, T3> row) {
+            row = default(ViewRow<T1, T2, T3>);
             int index1 = Table1.IndexOf(entity);
+            if (index1 == -1) return false;
             int index2 = Table2.IndexOf(entity);
+            if (index2 == -1) return false;
             int index3 = Table3.IndexOf(entity);
-            row = new ViewRow<T1, T2, T3>(this, entity);
-            return index1 != -1 && index2 != -1 && index2 != -1 && _predicate.IsAllowed(entity);
+            if (index3 == -1) return false;
+            row = new ViewRow<T1, T2, T3>(this, entity, index1, index2, index3);
+            return _predicate.IsAllowed(entity);
         }
 
         ViewEnumerator<ViewRow<T1, T2, T3>> IView<ViewRow<T1, T2, T3>>.GetEnumerator() => new ViewEnumerator<ViewRow<T1, T2, T3>>(this, Table1);
