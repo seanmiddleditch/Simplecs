@@ -1,13 +1,19 @@
 name: CI
 
-on: [push]
+on:
+  pull_request: []
+  push:
+    branches:
+      - master
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-16.04
+
     strategy:
       matrix:
-        dotnet: [ '3.0.100-preview9-014004' ]
+        dotnet: [ '3.0.100' ]
         config: [ Debug, Release ]
         
     steps:
@@ -16,6 +22,8 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dotnet }}
+      - run: dotnet restore
+        name: Restore
       - run: dotnet build -c ${{ matrix.config }}
         name: Build
       - run: dotnet test -c ${{ matrix.config }}
